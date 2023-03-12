@@ -3,10 +3,12 @@ body {
     text-align: center;
 }
 
+img {
+    pointer-events: none; /* Removes Microsoft Edge - Bing search on images */
 }
 
 A, A:active, A:visited, A:hover {
-    color: #0017c3;
+    color: #0057e2;
     text-decoration: none;
 }
 
