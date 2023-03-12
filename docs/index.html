@@ -16,7 +16,47 @@
     <header>
       <nav class="navbar bg-body-tertiary">
         <div class="container-fluid">
-          <h1 class="navbar-brand mb-0 h1">Welcome to <b>Pownas.se</b></h1>
+          <h1 class="navbar-brand mb-0 h1">
+            <img src="./favicon.svg" alt="pownas.se" width="30" height="24" aria-hidden="true">
+            Welcome to <b>Pownas.se</b>
+          </h1>
+          <ul class="navbar-nav flex-row flex-wrap ms-md-auto">
+            <li class="nav-item dropdown">
+              <button class="btn btn-link nav-link py-2 px-0 px-lg-2 dropdown-toggle d-flex align-items-center"
+                      id="bd-theme"
+                      type="button"
+                      aria-expanded="false"
+                      data-bs-toggle="dropdown"
+                      data-bs-display="static">
+                <svg href="./res/bootstrap-icons-1.10.3/circle-half.svg"></svg>
+                <svg class="bi my-1 theme-icon-active"><use href="#res/bootstrap-icons-1.10.3/circle-half"></use></svg>
+                <span class="d-lg-none ms-2">Toggle theme</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme" style="--bs-dropdown-min-width: 8rem;">
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
+                    <svg class="bi me-2 opacity-50 theme-icon"><use href="#res/bootstrap-icons-1.10.3/sun-fill"></use></svg>
+                    Light
+                    <svg class="bi ms-auto d-none"><use href="#check2"></use></svg>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
+                    <svg class="bi me-2 opacity-50 theme-icon"><use href="#res/bootstrap-icons-1.10.3/moon-stars-fill"></use></svg>
+                    Dark
+                    <svg class="bi ms-auto d-none"><use href="#check2"></use></svg>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto">
+                    <svg class="bi me-2 opacity-50 theme-icon"><use href="#res/bootstrap-icons-1.10.3/circle-half"></use></svg>
+                    Auto
+                    <svg class="bi ms-auto d-none"><use href="#check2"></use></svg>
+                  </button>
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div>
       </nav>
       <p>
@@ -29,7 +69,7 @@
         Blog: <a href="https://pownas.github.io/Jonas.ArvidsonFoto/" title="Pownas Blog">Pownas Blog</a>
       </p>
       <p>
-          My CV: <a href="https://pownas.github.io/CV" title="Show Pownas Curriculum vitae (CV)">pownas.github.io/CV</a>
+        My CV: <a href="https://pownas.github.io/CV" title="Show Pownas Curriculum vitae (CV)">pownas.github.io/CV</a>
       </p>
       <p>
         YouTube channel: <a href="https://www.youtube.com/channel/UCHbDLlJEZ_PRJADbNZiR_2A" title="Pownas lär dig, Swedish YouTube-channel">Pownas lär dig</a>
@@ -48,6 +88,7 @@
         Created via GitHub-pages.
       </p>
       <script src="./res/bootstrap-5.3.0-alpha1-dist/js/bootstrap.bundle.min.js"></script>
+      <script src="./res/js/bootstrap-v5.3-color-modes.js"></script>
     </footer>
   </body>
 </html>
