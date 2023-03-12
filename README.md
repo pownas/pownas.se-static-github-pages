@@ -1,2 +1,2 @@
 # pownas.se-webpage
-My static homepage
+My static website, hosted in GitHub Pages
