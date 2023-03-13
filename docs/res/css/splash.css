@@ -7,9 +7,21 @@ img {
     pointer-events: none; /* Removes Microsoft Edge - Bing search on images */
 }
 
-A, A:active, A:visited, A:hover {
+a, a:active, a:visited {
     color: #0057e2;
     text-decoration: none;
+}
+
+a:hover {
+    color: #fff;
+}
+
+.icon {
+    fill: #0057e2;
+}
+
+.icon:hover {
+    fill: #fff;
 }
 
 #tagline {
@@ -25,3 +37,4 @@ h2 {
     font-weight: bold;
     font-size: 1rem;
 }
+
