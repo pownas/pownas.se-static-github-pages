@@ -1,6 +1,6 @@
 <h1>projects.pownas.se</h1>
       <p>
-        <img width="30%" src="https://pownas.se/favicon.svg" />
+        <img width="30%" src="https://www.pownas.se/favicon.svg" />
       </p>
       <h2>Redirecting you to the URL:</h2>
       <h3>
