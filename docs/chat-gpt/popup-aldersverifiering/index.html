@@ -1,0 +1,135 @@
+<html>
+<head>
+  <style>
+    /* Du kan ändra stilen på popup-fönstret här */
+    #popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+    }
+
+    #popup-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 200px;
+      background: white;
+      border: 1px solid black;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #popup-content h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    #popup-content p {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    #popup-content button {
+      font-size: 16px;
+      margin: 5px;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="popup">
+    <div id="popup-content">
+      <h1>Välkommen till min webbplats!</h1>
+      <p>Är du över 20 år?</p>
+      <button id="yes-button">Ja</button>
+      <button id="no-button">Nej</button>
+    </div>
+  </div>
+  <div id="content">
+    <!-- Här kan du lägga till ditt webbplatsinnehåll -->
+    <h1>Detta är min webbplats</h1>
+    <p>Här kan du se mitt åldersbegränsade innehåll.</p>
+  </div>
+  <script>
+    // Här kan du lägga till din JavaScript-kod
+    // Hämta elementen från HTML-dokumentet
+    var popup = document.getElementById("popup");
+    var popupContent = document.getElementById("popup-content");
+    var yesButton = document.getElementById("yes-button");
+    var noButton = document.getElementById("no-button");
+    var content = document.getElementById("content");
+
+    // Skapa en funktion som visar popup-fönstret
+    function showPopup() {
+      popup.style.display = "block";
+    }
+
+    // Skapa en funktion som döljer popup-fönstret
+    function hidePopup() {
+      popup.style.display = "none";
+    }
+
+    // Skapa en funktion som visar innehållet
+    function showContent() {
+      content.style.display = "block";
+    }
+
+    // Skapa en funktion som döljer innehållet
+    function hideContent() {
+      content.style.display = "none";
+    }
+
+    // Skapa en funktion som hanterar användarens svar
+    function handleAnswer(answer) {
+      // Spara svaret i localStorage
+      localStorage.setItem("age-verified", answer);
+      // Om svaret är ja, visa innehållet och dölj popup-fönstret
+      if (answer === "yes") {
+        showContent();
+        hidePopup();
+      }
+      // Om svaret är nej, dölj innehållet och popup-fönstret och omdirigera användaren till en annan sida
+      else if (answer === "no") {
+        hideContent();
+        hidePopup();
+        window.location.href = "https://www.google.com";
+      }
+    }
+
+    // Lägg till händelselyssnare för knapparna
+    yesButton.addEventListener("click", function() {
+      handleAnswer("yes");
+    });
+
+    noButton.addEventListener("click", function() {
+      handleAnswer("no");
+    });
+
+    // Kontrollera om användaren har svarat tidigare
+    var previousAnswer = localStorage.getItem("age-verified");
+    // Om användaren har svarat ja, visa innehållet och dölj popup-fönstret
+    if (previousAnswer === "yes") {
+      showContent();
+      hidePopup();
+    }
+    // Om användaren har svarat nej, dölj innehållet och popup-fönstret och omdirigera användaren till en annan sida
+    else if (previousAnswer === "no") {
+      hideContent();
+      hidePopup();
+      window.location.href = "https://www.google.com";
+    }
+    // Om användaren inte har svarat, visa popup-fönstret och dölj innehållet
+    else {
+      showPopup();
+      hideContent();
+    }
+  </script>
+</body>
+</html>
