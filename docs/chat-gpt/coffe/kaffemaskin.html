@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animerad Kaffemaskin</title>
+<style>
+  /* Grundläggande stilar för kaffemaskinen */
+  .coffee-maker {
+    width: 200px;
+    height: 340px;
+    background-color: #964B00;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .coffee-pot {
+    width: 100px;
+    height: 150px;
+    background-color: #fff;
+    border-radius: 0 0 80px 80px;
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    overflow: hidden;
+  }
+  .coffee-top {
+    width: 100%;
+    height: 50px;
+    background-color: #333;
+    border-radius: 10px 10px 0 0;
+  }
+  .spout {
+    width: 20px;
+    height: 30px;
+    background-color: #333;
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .brew-button {
+    width: 80px;
+    height: 30px;
+    background-color: #DAA520;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Animation för kaffebryggning */
+  .brew-button:hover + .coffee-pot .coffee {
+    animation: brew 5s forwards;
+  }
+  @keyframes brew {
+    0% { height: 0; }
+    100% { height: 100%; }
+  }
+  .coffee {
+    width: 100%;
+    height: 0;
+    background-color: #6F4E37;
+    position: absolute;
+    bottom: 0;
+  }
+
+  /* Animation för rök */
+  .brew-button:hover + .coffee-pot .smoke {
+    animation: smoke 5s forwards;
+  }
+  @keyframes smoke {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.5; }
+  }
+  .smoke {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #EEE;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="coffee-maker">
+  <div class="coffee-top"></div>
+  <div class="spout"></div>
+  <div class="coffee-pot">
+    <div class="coffee"></div>
+    <div class="smoke"></div>
+  </div>
+  <button class="brew-button">Brygg kaffe</button>
+</div>
+
+<script>
+  // JavaScript för att starta animationen när användaren klickar på knappen
+  document.querySelector('.brew-button').addEventListener('click', function() {
+    var coffeePot = document.querySelector('.coffee-pot');
+    var coffee = document.createElement('div');
+    coffee.className = 'coffee';
+    coffeePot.appendChild(coffee);
+
+    var smoke = document.createElement('div');
+    smoke.className = 'smoke';
+    coffeePot.appendChild(smoke);
+  });
+</script>
+
+</body>
+</html>
