@@ -51,7 +51,7 @@
                     let x = 0;
 
                     for(let i = 0; i < bufferLength; i++) {
-                        barHeight = dataArray[i] * 3; // Multiply barHeight by a factor
+                        barHeight = dataArray[i] * 10; // Multiply barHeight by a factor
                         ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
                         ctx.fillRect(x,canvas.height-barHeight/2,barWidth,barHeight/2);
                         x += barWidth + 1;
