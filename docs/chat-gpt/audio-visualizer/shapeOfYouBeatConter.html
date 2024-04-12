@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape of You Visualizer</title>
+    <style>
+        #visualizer {
+            width: 100%;
+            height: 400px;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <button id="startButton">Start</button>
+    <canvas id="visualizer"></canvas>
+    <script>
+        const startButton = document.getElementById('startButton');
+        startButton.addEventListener('click', function() {
+            const audio = new Audio('ShapeOfYou.m4a');
+            const audioContext = new window.AudioContext();
+            const analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            const canvas = document.getElementById('visualizer');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                ctx.fillStyle = 'rgb(0, 0, 0)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+
+                for(let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] * 3; // Multiply barHeight by a factor
+                    ctx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+                    ctx.fillRect(x,canvas.height-barHeight/2,barWidth,barHeight/2);
+                    x += barWidth + 1;
+                }
+            };
+
+            audio.play();
+            draw();
+        });
+    </script>
+</body>
+</html>
