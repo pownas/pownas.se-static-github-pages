@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tick counter</title>
+    <style>
+        table {
+            width: 500px;
+            border-collapse: collapse;
+        }
+        td {
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+            text-align: center;
+            font-size: 20px;
+        }
+        .blank {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Tick counter</h1>
+        <input type="number" id="bpm" placeholder="BPM">
+        <button type="submit" onclick="setBpm()">Set BPM</button>
+        <p>
+            <table>
+                <tr>
+                    <td class="tick-32">8</td>
+                    <td class="tick-1">1</td>
+                    <td class="tick-2">2</td>
+                    <td class="tick-3">3</td>
+                    <td class="tick-4">4</td>
+                    <td class="tick-5">5</td>
+                    <td class="tick-6">6</td>
+                    <td class="tick-7">7</td>
+                    <td class="tick-8">8</td>
+                </tr>
+                <tr>
+                    <td class="tick-31">7</td>
+                    <td class="tick-33 blank" colspan="7"></td>
+                    <td class="tick-9">1</td>
+                </tr>
+                <tr>
+                    <td class="tick-30">6</td>
+                    <td class="blank" colspan="7"></td>
+                    <td class="tick-10">2</td>
+                </tr>
+                <tr>
+                    <td class="tick-29">5</td>
+                    <td class="blank" colspan="7"></td>
+                    <td class="tick-11">3</td>
+                </tr>
+                <tr>
+                    <td class="tick-28">4</td>
+                    <td class="blank" colspan="7"></td>
+                    <td class="tick-12">4</td>
+                </tr>
+                <tr>
+                    <td class="tick-27">3</td>
+                    <td class="blank" colspan="7"></td>
+                    <td class="tick-13">5</td>
+                </tr>
+                <tr>
+                    <td class="tick-26">2</td>
+                    <td class="blank" colspan="7"></td>
+                    <td class="tick-14">6</td>
+                </tr>
+                <tr>
+                    <td class="tick-25">1</td>
+                    <td class="blank" colspan="7"></td>
+                    <td class="tick-15">7</td>
+                </tr>
+                <tr>
+                    <td class="tick-24">8</td>
+                    <td class="tick-23">7</td>
+                    <td class="tick-22">6</td>
+                    <td class="tick-21">5</td>
+                    <td class="tick-20">4</td>
+                    <td class="tick-19">3</td>
+                    <td class="tick-18">2</td>
+                    <td class="tick-17">1</td>
+                    <td class="tick-16">8</td>
+                </tr>
+            </table>
+        </p>
+        <p>
+            <br />
+            <br />
+            <br />
+            <br />
+            <table>
+                <tr>
+                    <td class="tick-1">1</td>
+                    <td class="tick-2">2</td>
+                    <td class="tick-3">3</td>
+                    <td class="tick-4">4</td>
+                    <td class="tick-5">5</td>
+                    <td class="tick-6">6</td>
+                    <td class="tick-7">7</td>
+                    <td class="tick-8">8</td>
+                </tr>
+                <tr>
+                    <td class="tick-9">2</td>
+                    <td class="tick-10">2</td>
+                    <td class="tick-11">3</td>
+                    <td class="tick-12">4</td>
+                    <td class="tick-13">5</td>
+                    <td class="tick-14">6</td>
+                    <td class="tick-15">7</td>
+                    <td class="tick-16">8</td>
+                </tr>
+                <tr>
+                    <td class="tick-17">3</td>
+                    <td class="tick-18">2</td>
+                    <td class="tick-19">3</td>
+                    <td class="tick-20">4</td>
+                    <td class="tick-21">5</td>
+                    <td class="tick-22">6</td>
+                    <td class="tick-23">7</td>
+                    <td class="tick-24">8</td>
+                </tr>
+                <tr>
+                    <td class="tick-25">4</td>
+                    <td class="tick-26">2</td>
+                    <td class="tick-27">3</td>
+                    <td class="tick-28">4</td>
+                    <td class="tick-29">5</td>
+                    <td class="tick-30">6</td>
+                    <td class="tick-31">7</td>
+                    <td class="tick-32">8</td>
+                </tr>
+            </table>
+        </p>
+    </main>
+</body>
+<script>
+    let bpm = 120; //beats per minute
+    let waitForBpm = 60000 / bpm; //60000ms = 1 minute / bpm = beats per minute
+    let tick = 1; //start at 1
+
+    let collection = document.getElementsByClassName(`tick-1`);
+
+    function setBpm() {
+        bpm = document.getElementById('bpm').value;
+        waitForBpm = 60000 / bpm;
+        
+        let tickInterval = setInterval(() => {
+            collection = document.getElementsByClassName(`tick-${tick}`);
+            for (let i = 0; i < collection.length; i++) {
+                collection[i].style.backgroundColor = "green";
+            }
+
+            if (tick >= 29) {
+                collection = document.getElementsByClassName(`tick-${tick}`);
+                for (let i = 0; i < collection.length; i++) {
+                    collection[i].style.backgroundColor = "yellow";
+                }
+            } else if (tick == 17)
+            {
+                collection = document.getElementsByClassName(`tick-${tick}`);
+                for (let i = 0; i < collection.length; i++) {
+                    collection[i].style.backgroundColor = "teal";
+                }
+            } 
+            else if (tick == 1)
+            {
+                collection = document.getElementsByClassName(`tick-${tick}`);
+                for (let i = 0; i < collection.length; i++) {
+                    collection[i].style.backgroundColor = "blue";
+                }
+            }
+
+            tick++;
+            if (tick > 32) {
+                resetTick();
+            }
+        }, waitForBpm);
+    };
+
+    function resetTick() {
+        tick = 1;
+        for (let i = 1; i <= 32; i++) {
+            collection = document.getElementsByClassName(`tick-${i}`);
+            for (let i = 0; i < collection.length; i++) {
+                collection[i].style.backgroundColor = "white";
+            }
+        }
+    };
+</script>
+</html>
