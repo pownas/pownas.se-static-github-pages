@@ -159,6 +159,19 @@
                 for (let i = 0; i < collection.length; i++) {
                     collection[i].style.backgroundColor = "yellow";
                 }
+            } else if (tick == 17)
+            {
+                collection = document.getElementsByClassName(`tick-${tick}`);
+                for (let i = 0; i < collection.length; i++) {
+                    collection[i].style.backgroundColor = "teal";
+                }
+            } 
+            else if (tick == 1)
+            {
+                collection = document.getElementsByClassName(`tick-${tick}`);
+                for (let i = 0; i < collection.length; i++) {
+                    collection[i].style.backgroundColor = "blue";
+                }
             }
 
             tick++;
