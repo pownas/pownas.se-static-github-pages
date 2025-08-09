@@ -79,7 +79,7 @@
     .submenu .menu-item.has-submenu > a::after { content: "▸"; margin-left: auto; color: #6b7280; }
 
     /* Hover/focus open (mouse) + gap between flyouts */
-    @media (hover: hover) and (pointer: fine) {
+    @media (hover: hover) and (pointer: fine) and (min-width: 961px) {
       /* Main menu items and their direct submenus */
       .menu > .menu-item.has-submenu:hover > .submenu,
       .menu > .menu-item.has-submenu:focus-within > .submenu,
@@ -123,6 +123,12 @@
     @media (max-width: 960px) {
       .menu-toggle { display: inline-grid; }
       .site-header .bar { grid-template-columns: 1fr max-content; }
+
+      /* Ensure hover-open class never interferes with mobile layout */
+      .menu-item.hover-open > .submenu,
+      .submenu .menu-item.hover-open > .submenu {
+        display: none !important;
+      }
 
       .main-nav {
         position: fixed; inset: var(--bar-h) 0 0 0; background: var(--bar-bg);
@@ -366,7 +372,12 @@
 
       // Enhanced hover behavior for smooth navigation between submenus
       const mqHover = window.matchMedia('(hover: hover) and (pointer: fine)');
-      if (mqHover.matches) {
+      const mqDesktop = window.matchMedia('(min-width: 961px)');
+      
+      function initHoverBehavior() {
+        // Only initialize hover behavior if all conditions are met
+        if (!mqHover.matches || !mqDesktop.matches) return;
+        
         let hoverTimeouts = new Map();
         
         menu.querySelectorAll('.menu-item.has-submenu').forEach(li => {
@@ -375,8 +386,10 @@
           if (!link || !submenu) return;
           
           li.addEventListener('mouseenter', () => {
-            // Only apply hover logic on desktop with fine pointer and hover capability
-            if (!isDesktopLayout() || isTouchPrimary() || !mqHover.matches) return;
+            // Triple check: desktop layout, not touch primary, and hover capable
+            if (!isDesktopLayout() || isTouchPrimary() || !mqHover.matches || !mqDesktop.matches) {
+              return;
+            }
             
             // Clear any pending close timeout for this item
             if (hoverTimeouts.has(li)) {
@@ -390,8 +403,10 @@
           });
           
           li.addEventListener('mouseleave', () => {
-            // Only apply hover logic on desktop with fine pointer and hover capability
-            if (!isDesktopLayout() || isTouchPrimary() || !mqHover.matches) return;
+            // Triple check: desktop layout, not touch primary, and hover capable
+            if (!isDesktopLayout() || isTouchPrimary() || !mqHover.matches || !mqDesktop.matches) {
+              return;
+            }
             
             // Set a timeout to close after a short delay
             const timeout = setTimeout(() => {
@@ -403,14 +418,20 @@
           });
         });
         
-        // Clean up hover classes when switching to mobile
-        mqMobile.addEventListener('change', () => {
+        // Clean up hover classes when switching away from desktop
+        const cleanupHover = () => {
           menu.querySelectorAll('.hover-open').forEach(li => {
             li.classList.remove('hover-open');
           });
           hoverTimeouts.clear();
-        });
+        };
+        
+        mqMobile.addEventListener('change', cleanupHover);
+        mqDesktop.addEventListener('change', cleanupHover);
       }
+      
+      // Initialize hover behavior only if appropriate
+      initHoverBehavior();
 
       // Hamburger open/close (mobile panel)
       const setOpen = (on) => {
