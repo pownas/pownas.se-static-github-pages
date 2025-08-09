@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ArvidsonFoto.se – Navmeny Preview (flip + mobile UX)</title>
+  <style>
+    :root{
+      --bar-h: 54px;
+      --bar-bg: #0f1113;
+      --bar-fg: #f3f5f7;
+      --muted: #aab2bd;
+      --accent: #8bc34a;
+      --submenu-bg: #f1f3f5;
+      --submenu-fg: #212529;
+      --submenu-border: #dfe3e6;
+      --shadow: 0 8px 24px rgba(0,0,0,.2);
+      --radius: 8px;
+      --speed: 160ms;
+      --z-header: 1000;
+      --z-backdrop: 900;
+
+      /* Mobile toggle hit area */
+      --toggle-touch: 64px; /* total clickable width for the +/× button */
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; color: #e7eaee; background:#0b0d10; }
+    .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    /* Header / Bar */
+    .site-header { position: sticky; top: 0; z-index: var(--z-header); background: var(--bar-bg); color: var(--bar-fg); box-shadow: 0 1px 0 rgba(255,255,255,.04); }
+    .site-header .bar { height: var(--bar-h); display: grid; grid-template-columns: auto max-content; align-items: center; gap: 12px; padding: 0 16px; max-width: 1280px; margin-inline: auto; }
+    .brand { color: var(--bar-fg); text-decoration: none; font-weight: 600; letter-spacing: .2px; }
+
+    /* Hamburger (mobile) */
+    .menu-toggle { display: none; place-self: center end; background: transparent; border: 0; padding: 8px; margin: -8px; cursor: pointer; color: var(--bar-fg); }
+    .menu-toggle-box { display: inline-grid; gap: 4px; }
+    .menu-toggle .line { width: 22px; height: 2px; background: currentColor; display: block; border-radius: 2px; }
+
+    /* Nav / Menus */
+    .main-nav { position: relative; }
+    .menu { list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; gap: 4px; }
+    .menu > .menu-item > a { display: inline-flex; align-items: center; height: var(--bar-h); padding: 0 12px; color: var(--bar-fg); text-decoration: none; font-weight: 500; }
+    .menu > .menu-item > a:hover, .menu > .menu-item > a:focus-visible { background: rgba(255,255,255,.06); outline: none; }
+    .menu > .menu-item.has-submenu > a::after { content: "▾"; margin-left: 6px; font-size: 0.8em; opacity: .7; }
+
+    /* Hide mobile "+" buttons by default (desktop) */
+    .submenu-toggle { display: none !important; }
+
+    /* Submenus (desktop baseline) */
+    .submenu {
+      list-style: none; margin: 0; padding: 8px;
+      position: absolute; left: 0; top: calc(100% - 2px);
+      min-width: 260px; background: var(--submenu-bg); color: var(--submenu-fg);
+      border: 1px solid var(--submenu-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: none;
+    }
+    .menu-item.has-submenu { position: relative; }
+    .menu-item .submenu .menu-item { position: relative; }
+    .submenu .menu-item > a {
+      display: flex; align-items: center;
+      min-height: 40px; padding: 8px 12px; border-radius: 6px;
+      color: var(--submenu-fg); text-decoration: none;
+    }
+    .submenu .menu-item > a:hover, .submenu .menu-item > a:focus-visible { background: #e7eaee; outline: none; color:#111; }
+    .submenu .menu-item.has-submenu > a::after { content: "▸"; margin-left: auto; color: #6b7280; }
+
+    /* Show on hover/focus (desktop with mouse) */
+    @media (hover: hover) and (pointer: fine) {
+      .menu > .menu-item.has-submenu:hover > .submenu,
+      .menu > .menu-item.has-submenu:focus-within > .submenu { display: block; }
+      .submenu .menu-item.has-submenu:hover > .submenu,
+      .submenu .menu-item.has-submenu:focus-within > .submenu { display: block; left: 100%; top: -8px; }
+    }
+
+    /* Desktop flip: if we add .open-left on li, open submenu to the left to keep inside viewport */
+    @media (min-width: 961px) {
+      .menu-item.open > .submenu { display: block; } /* tap-to-open state */
+      .submenu .menu-item.open > .submenu { display: block; left: 100%; top: -8px; }
+
+      /* Flip rules */
+      .menu-item.open-left > .submenu { left: auto; right: 0; } /* top-level dropdown flip (rare) */
+      .submenu .menu-item.open-left > .submenu { left: auto; right: 100%; } /* nested flyout flip */
+      .submenu .menu-item.open-left > a::after { content: "◂"; }
+    }
+
+    /* Search */
+    .menu > .search { margin-left: auto; display: flex; align-items: center; }
+    .search-form input[type="search"]{
+      height: 34px; border-radius: 999px; border: 1px solid #3a3f44; outline: none;
+      background: #171a1d; color: var(--bar-fg); padding: 0 12px; width: 180px;
+    }
+    .search-form input::placeholder { color: var(--muted); }
+
+    /* Mobile / small screens */
+    @media (max-width: 960px) {
+      .menu-toggle { display: inline-grid; }
+      .site-header .bar { grid-template-columns: 1fr max-content; }
+
+      .main-nav {
+        position: fixed; inset: var(--bar-h) 0 0 0; background: var(--bar-bg);
+        transform: translateY(-8px); opacity: 0; pointer-events: none;
+        transition: transform var(--speed) ease, opacity var(--speed) ease;
+        overflow-y: auto; z-index: calc(var(--z-backdrop) + 1);
+      }
+      .site-header.nav-open .main-nav { transform: translateY(0); opacity: 1; pointer-events: auto; }
+
+      .site-header .backdrop { position: fixed; inset: var(--bar-h) 0 0 0; background: rgba(0,0,0,.4); z-index: var(--z-backdrop); }
+      .site-header .backdrop[hidden] { display: none; }
+
+      .menu { display: block; padding: 8px 10px 32px; }
+      .menu > .menu-item > a {
+        height: auto; padding: 12px 12px;
+        border-radius: 8px;
+      }
+      .menu > .menu-item + .menu-item { margin-top: 4px; }
+
+      /* Reserve space on the right for the toggle to avoid accidental link taps */
+      .menu > .menu-item.has-submenu > a,
+      .submenu .menu-item.has-submenu > a {
+        padding-right: calc(var(--toggle-touch) + 18px);
+      }
+
+      /* Accordion behavior: height animation; collapsed state has no spacing/border to avoid leaks */
+      .submenu-toggle {
+        position: absolute; right: 8px; top: 4px; z-index: 2;
+        background: #262a2f; color: var(--bar-fg);
+        border: 1px solid #343a40; border-radius: 10px;
+        width: var(--toggle-touch); height: 44px; display: grid !important; place-items: center;
+        touch-action: manipulation;
+      }
+      .submenu-toggle .icon { transition: transform var(--speed); font-size: 18px; }
+      .menu-item.expanded > .submenu-toggle .icon { transform: rotate(45deg); }
+
+      .menu-item.has-submenu { position: relative; }
+      .menu-item .submenu {
+        position: static; display: block; background: #111418; color: var(--bar-fg);
+        height: 0; overflow: hidden; transition: height 220ms ease; will-change: height;
+
+        /* Collapsed (no visual leak) */
+        padding: 0; margin: 0; border-left: 0 solid #2a2f35; border-radius: 10px;
+      }
+      /* Expanded spacing restored (padding/margin applied when li.expanded) */
+      .menu-item.expanded > .submenu {
+        padding: 4px; margin: 4px 0 8px 8px; border-left-width: 2px;
+      }
+
+      .submenu .menu-item > a { color: #d9dde2; padding: 10px 10px; border-radius: 6px; }
+      .submenu .menu-item.has-submenu > a::after { display: none; }
+    }
+
+    /* Active state hint */
+    .menu > .menu-item > a[aria-current="page"],
+    .submenu .menu-item > a[aria-current="page"] { color: var(--accent); }
+
+    /* Demo content area */
+    .content { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+    .card { background:#111418; border:1px solid #23272f; border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.2); margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <header class="site-header" role="banner">
+    <div class="bar">
+      <a class="brand" href="/" aria-label="ArvidsonFoto.se">ArvidsonFoto.se</a>
+
+      <button id="menu-toggle" class="menu-toggle" aria-controls="main-menu" aria-expanded="false" aria-label="Öppna huvudmeny">
+        <span class="menu-toggle-box" aria-hidden="true">
+          <span class="line"></span><span class="line"></span><span class="line"></span>
+        </span>
+      </button>
+
+      <nav class="main-nav" role="navigation" aria-label="Huvudmeny">
+        <ul id="main-menu" class="menu" role="menubar">
+          <li class="menu-item"><a role="menuitem" href="#" aria-current="page">Senast</a></li>
+
+          <li class="menu-item has-submenu">
+            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Fåglar</a>
+            <ul class="submenu" role="menu" aria-label="Fåglar">
+              <li class="menu-item"><a role="menuitem" href="#">Alkor och labbar</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Dagrovfåglar</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Doppingar och skarvar</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Gäss</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Hackspettar</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Kråkfåglar</a></li>
+              <li class="menu-item has-submenu">
+                <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Tättingar</a>
+                <ul class="submenu" role="menu" aria-label="Tättingar">
+                  <li class="menu-item"><a role="menuitem" href="#">Finkar och siskor</a></li>
+                  <li class="menu-item has-submenu">
+                    <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Flugsnappare</a>
+                    <ul class="submenu" role="menu" aria-label="Flugsnappare">
+                      <li class="menu-item"><a role="menuitem" href="#">Grå flugsnappare</a></li>
+                      <li class="menu-item"><a role="menuitem" href="#">Halsbandsflugsnappare</a></li>
+                      <li class="menu-item"><a role="menuitem" href="#">Mindre flugsnappare</a></li>
+                      <li class="menu-item"><a role="menuitem" href="#">Svartvit flugsnappare</a></li>
+                    </ul>
+                  </li>
+                  <li class="menu-item"><a role="menuitem" href="#">Lärkor</a></li>
+                  <li class="menu-item"><a role="menuitem" href="#">Mesar</a></li>
+                </ul>
+              </li>
+              <li class="menu-item"><a role="menuitem" href="#">Vadare</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Änder</a></li>
+            </ul>
+          </li>
+
+          <li class="menu-item has-submenu">
+            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Däggdjur</a>
+            <ul class="submenu" role="menu" aria-label="Däggdjur">
+              <li class="menu-item"><a role="menuitem" href="#">Rovdjur</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Hjortdjur</a></li>
+            </ul>
+          </li>
+
+          <li class="menu-item has-submenu">
+            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Insekter</a>
+            <ul class="submenu" role="menu" aria-label="Insekter">
+              <li class="menu-item"><a role="menuitem" href="#">Fjärilar</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Trollsländor</a></li>
+            </ul>
+          </li>
+
+          <li class="menu-item has-submenu">
+            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Info</a>
+            <ul class="submenu" role="menu" aria-label="Info">
+              <li class="menu-item"><a role="menuitem" href="#">Om sidan</a></li>
+              <li class="menu-item"><a role="menuitem" href="#">Kontakt</a></li>
+            </ul>
+          </li>
+
+          <li class="menu-item search">
+            <form role="search" class="search-form" action="#" method="get">
+              <label class="sr-only" for="q">Sök</label>
+              <input id="q" name="q" type="search" placeholder="Sök" />
+            </form>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <div class="backdrop" hidden></div>
+  </header>
+
+  <main class="content">
+    <div class="card">
+      Förbättringar: (1) Desktop-flyout vänder åt vänster om den annars hamnar utanför vyn. (2) På mobil är +/×‑knappar större och tar över höger sida för att undvika feltryck. (3) Inga visuella läckor när nivåer stängs.
+    </div>
+    <div style="height:900px"></div>
+  </main>
+
+  <script>
+    (function () {
+      const header = document.querySelector('.site-header');
+      const menu = document.getElementById('main-menu');
+      const toggle = document.getElementById('menu-toggle');
+      const backdrop = document.querySelector('.site-header .backdrop');
+      if (!menu) return;
+
+      // Track latest pointer type
+      let lastPointerType = 'mouse';
+      window.addEventListener('pointerdown', (e) => { if (e.pointerType) lastPointerType = e.pointerType; }, { passive: true });
+
+      const mqMobile = window.matchMedia('(max-width: 960px)');
+      const mqCoarse = window.matchMedia('(pointer: coarse)');
+      const mqNoHover = window.matchMedia('(hover: none)');
+
+      const isMobile = () => mqMobile.matches;
+      const isDesktopLayout = () => !mqMobile.matches;
+      const isTouchPrimary = () => lastPointerType === 'touch' || mqCoarse.matches || mqNoHover.matches;
+
+      // Build toggles and ARIA
+      menu.querySelectorAll('.menu-item.has-submenu').forEach((li, i) => {
+        const link = li.querySelector(':scope > a');
+        const sub = li.querySelector(':scope > .submenu');
+        if (!link || !sub) return;
+        if (!sub.id) sub.id = `submenu-${i+1}`;
+        link.setAttribute('aria-haspopup', 'true');
+        link.setAttribute('aria-expanded', 'false');
+
+        // Mobile-only toggle (+) — in DOM, hidden on desktop via CSS
+        const btn = document.createElement('button');
+        btn.className = 'submenu-toggle';
+        btn.type = 'button';
+        btn.setAttribute('aria-controls', sub.id);
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-label', `${link.textContent?.trim() || 'Undermeny'} – expandera`);
+        btn.innerHTML = '<span class="icon" aria-hidden="true">+</span>';
+        li.insertBefore(btn, sub);
+
+        // Mobile accordion: height-to-auto animation (no leaks)
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const expanding = !li.classList.contains('expanded');
+          if (expanding) expandBranch(li);
+          else collapseBranch(li);
+        });
+
+        // Touch-first desktop: first tap opens instead of navigating
+        link.addEventListener('click', (ev) => {
+          if (isDesktopLayout() && isTouchPrimary()) {
+            const opened = li.classList.contains('open');
+            if (!opened) {
+              ev.preventDefault();
+              closeSiblingsTap(li);
+              openTap(li);
+              // After opening on touch, ensure flip if near viewport edge
+              ensureFlipToFit(li);
+            }
+          }
+        });
+
+        // Keyboard helpers
+        link.addEventListener('keydown', (ev) => {
+          if (ev.key === 'ArrowRight') {
+            openTap(li); ensureFlipToFit(li);
+            const first = sub?.querySelector('.menu-item > a');
+            if (first) { ev.preventDefault(); first.focus(); }
+          }
+          if ((ev.key === 'Enter' || ev.key === ' ') && isMobile()) {
+            ev.preventDefault();
+            btn.click();
+          }
+          if (ev.key === 'ArrowDown' && !isMobile()) {
+            ev.preventDefault();
+            openTap(li); ensureFlipToFit(li);
+            sub?.querySelector('.menu-item > a')?.focus();
+          }
+        });
+
+        // Desktop hover/focus: whenever submenu is about to show, evaluate flip
+        li.addEventListener('pointerenter', () => { if (isDesktopLayout()) ensureFlipToFit(li); });
+        li.addEventListener('focusin', () => { if (isDesktopLayout()) ensureFlipToFit(li); });
+      });
+
+      // Hamburger open/close (mobile panel)
+      const setOpen = (on) => {
+        toggle.setAttribute('aria-expanded', String(on));
+        header.classList.toggle('nav-open', on);
+        backdrop.hidden = !on;
+        document.body.style.overflow = on ? 'hidden' : '';
+        if (!on) {
+          // collapse all expanded on mobile
+          menu.querySelectorAll('.expanded').forEach(collapseBranch);
+        }
+      };
+      toggle?.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') === 'true';
+        setOpen(!open);
+      });
+      backdrop?.addEventListener('click', () => setOpen(false));
+      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setOpen(false); closeAllTap(); } });
+
+      // Close touch-open dropdowns on outside click (desktop)
+      document.addEventListener('click', (e) => {
+        if (!(e.target instanceof Element)) return;
+        if (isDesktopLayout() && !e.target.closest('.main-nav')) closeAllTap();
+        if (header.classList.contains('nav-open') && e.target.closest('.main-nav a')) setOpen(false);
+      });
+
+      // Reset states on layout changes
+      mqMobile.addEventListener('change', () => { setOpen(false); closeAllTap(); });
+
+      // ---- Mobile height animation helpers ----
+      function expandBranch(li) {
+        const link = li.querySelector(':scope > a');
+        const btn  = li.querySelector(':scope > .submenu-toggle');
+        const sub  = li.querySelector(':scope > .submenu');
+        if (!sub) return;
+
+        li.classList.add('expanded');
+        link && link.setAttribute('aria-expanded', 'true');
+        btn  && btn.setAttribute('aria-expanded', 'true');
+
+        // Start from current height, animate to target, then set auto
+        const start = sub.getBoundingClientRect().height;
+        sub.style.height = start + 'px';
+        requestAnimationFrame(() => {
+          const target = sub.scrollHeight; // includes padding now that li.expanded applied spacing
+          sub.style.height = target + 'px';
+        });
+        const onEnd = (ev) => {
+          if (ev.propertyName !== 'height') return;
+          sub.style.height = 'auto';
+        };
+        sub.addEventListener('transitionend', onEnd, { once: true });
+
+        // Keep section in view
+        setTimeout(() => sub.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+      }
+
+      function collapseBranch(li) {
+        const link = li.querySelector(':scope > a');
+        const btn  = li.querySelector(':scope > .submenu-toggle');
+        const sub  = li.querySelector(':scope > .submenu');
+        if (!sub) return;
+
+        // Collapse descendants first
+        li.querySelectorAll(':scope .expanded').forEach(child => {
+          child.classList.remove('expanded');
+          const cSub = child.querySelector(':scope > .submenu');
+          const cLink = child.querySelector(':scope > a');
+          const cBtn  = child.querySelector(':scope > .submenu-toggle');
+          cLink && cLink.setAttribute('aria-expanded', 'false');
+          cBtn  && cBtn.setAttribute('aria-expanded', 'false');
+          if (cSub) { cSub.style.height = '0px'; }
+        });
+
+        // Animate to 0
+        const current = sub.scrollHeight;
+        sub.style.height = current + 'px';
+        // force reflow
+        sub.offsetHeight;
+        sub.style.height = '0px';
+
+        li.classList.remove('expanded');
+        link && link.setAttribute('aria-expanded', 'false');
+        btn  && btn.setAttribute('aria-expanded', 'false');
+      }
+
+      // ---- Desktop: touch-open and flip helpers ----
+      function openTap(li) {
+        const link = li.querySelector(':scope > a');
+        if (!li.classList.contains('open')) {
+          closeSiblingsTap(li);
+          li.classList.add('open');
+          link?.setAttribute('aria-expanded', 'true');
+        }
+      }
+      function closeTap(li) {
+        const link = li.querySelector(':scope > a');
+        li.classList.remove('open');
+        li.classList.remove('open-left');
+        link?.setAttribute('aria-expanded', 'false');
+        li.querySelectorAll(':scope .open').forEach(n => { n.classList.remove('open'); n.classList.remove('open-left'); });
+      }
+      function closeAllTap() { menu.querySelectorAll('.open').forEach(closeTap); }
+      function closeSiblingsTap(li) {
+        const parent = li.parentElement;
+        if (!parent) return;
+        parent.querySelectorAll(':scope > .menu-item.open').forEach(sib => { if (sib !== li) closeTap(sib); });
+      }
+
+      // Compute if submenu should flip left to stay in viewport
+      function ensureFlipToFit(li) {
+        if (!isDesktopLayout()) return;
+        const sub = li.querySelector(':scope > .submenu');
+        if (!sub) return;
+
+        // Wait for CSS to show it (hover/open) then measure
+        requestAnimationFrame(() => {
+          // If still hidden (e.g., touch open just set .open), we should be able to measure; if not, force a temporary measure pass
+          const wasHidden = getComputedStyle(sub).display === 'none';
+          if (wasHidden) {
+            sub.style.visibility = 'hidden';
+            sub.style.display = 'block';
+          }
+          requestAnimationFrame(() => {
+            const rect = sub.getBoundingClientRect();
+            const rightOverflow = rect.right > (window.innerWidth - 8);
+            const leftOverflow = rect.left < 8;
+
+            // Flip to left if it overflows on the right, otherwise keep default
+            if (rightOverflow && !leftOverflow) {
+              li.classList.add('open-left');
+            } else {
+              li.classList.remove('open-left');
+            }
+
+            if (wasHidden) {
+              sub.style.display = '';
+              sub.style.visibility = '';
+            }
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
