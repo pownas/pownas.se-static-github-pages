@@ -6,7 +6,7 @@
   <title>ArvidsonFoto.se – Navmeny (mobile toggle anchored + desktop flip)</title>
   <style>
     :root{
-      --bar-h: 54px;
+      --bar-h: 54px; /* height of header bar */
       --bar-bg: #0f1113;
       --bar-fg: #f3f5f7;
       --muted: #aab2bd;
@@ -82,10 +82,19 @@
 
     /* Hover/focus open (mouse) + gap between flyouts */
     @media (hover: hover) and (pointer: fine) {
+      /* Main menu items and their direct submenus */
       .menu > .menu-item.has-submenu:hover > .submenu,
-      .menu > .menu-item.has-submenu:focus-within > .submenu { display: block; }
+      .menu > .menu-item.has-submenu:focus-within > .submenu,
+      .menu > .menu-item.hover-open > .submenu { display: block; }
+      
+      /* Submenu items and their nested submenus */
       .submenu .menu-item.has-submenu:hover > .submenu,
-      .submenu .menu-item.has-submenu:focus-within > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
+      .submenu .menu-item.has-submenu:focus-within > .submenu,
+      .submenu .menu-item.hover-open > .submenu { 
+        display: block; 
+        left: calc(100% + var(--submenu-gap)); 
+        top: -8px; 
+      }
     }
 
     /* Desktop tap-open + flip and strong override for flip while hovered */
@@ -175,6 +184,11 @@
     /* Active state hint */
     .menu > .menu-item > a[aria-current="page"],
     .submenu .menu-item > a[aria-current="page"] { color: var(--accent); }
+
+    /* Demo content area */
+    .content { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+    .card { background:#111418; border:1px solid #23272f; border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.2); margin: 12px 0; }
+    .demo-spacer { height: 900px; }
   </style>
 </head>
 <body>
@@ -189,61 +203,61 @@
       </button>
 
       <nav class="main-nav" role="navigation" aria-label="Huvudmeny">
-        <ul id="main-menu" class="menu" role="menubar">
-          <li class="menu-item"><a role="menuitem" href="#">Senast</a></li>
+        <ul id="main-menu" class="menu">
+          <li class="menu-item"><a href="#">Senast</a></li>
 
           <li class="menu-item has-submenu">
-            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Fåglar</a>
-            <ul class="submenu" role="menu" aria-label="Fåglar">
-              <li class="menu-item"><a role="menuitem" href="#">Alkor och labbar</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Dagrovfåglar</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Doppingar och skarvar</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Gäss</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Hackspettar</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Kråkfåglar</a></li>
+            <a aria-haspopup="true" aria-expanded="false" href="#">Fåglar</a>
+            <ul class="submenu" aria-label="Fåglar">
+              <li class="menu-item"><a href="#">Alkor och labbar</a></li>
+              <li class="menu-item"><a href="#">Dagrovfåglar</a></li>
+              <li class="menu-item"><a href="#">Doppingar och skarvar</a></li>
+              <li class="menu-item"><a href="#">Gäss</a></li>
+              <li class="menu-item"><a href="#">Hackspettar</a></li>
+              <li class="menu-item"><a href="#">Kråkfåglar</a></li>
               <li class="menu-item has-submenu">
-                <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Tättingar</a>
-                <ul class="submenu" role="menu" aria-label="Tättingar">
-                  <li class="menu-item"><a role="menuitem" href="#">Finkar och siskor</a></li>
+                <a aria-haspopup="true" aria-expanded="false" href="#">Tättingar</a>
+                <ul class="submenu" aria-label="Tättingar">
+                  <li class="menu-item"><a href="#">Finkar och siskor</a></li>
                   <li class="menu-item has-submenu">
-                    <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Flugsnappare</a>
-                    <ul class="submenu" role="menu" aria-label="Flugsnappare">
-                      <li class="menu-item"><a role="menuitem" href="#">Grå flugsnappare</a></li>
-                      <li class="menu-item"><a role="menuitem" href="#">Halsbandsflugsnappare</a></li>
-                      <li class="menu-item"><a role="menuitem" href="#">Mindre flugsnappare</a></li>
-                      <li class="menu-item"><a role="menuitem" href="#">Svartvit flugsnappare</a></li>
+                    <a aria-haspopup="true" aria-expanded="false" href="#">Flugsnappare</a>
+                    <ul class="submenu" aria-label="Flugsnappare">
+                      <li class="menu-item"><a href="#">Grå flugsnappare</a></li>
+                      <li class="menu-item"><a href="#">Halsbandsflugsnappare</a></li>
+                      <li class="menu-item"><a href="#">Mindre flugsnappare</a></li>
+                      <li class="menu-item"><a href="#">Svartvit flugsnappare</a></li>
                     </ul>
                   </li>
-                  <li class="menu-item"><a role="menuitem" href="#">Lärkor</a></li>
-                  <li class="menu-item"><a role="menuitem" href="#">Mesar</a></li>
+                  <li class="menu-item"><a href="#">Lärkor</a></li>
+                  <li class="menu-item"><a href="#">Mesar</a></li>
                 </ul>
               </li>
-              <li class="menu-item"><a role="menuitem" href="#">Vadare</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Änder</a></li>
+              <li class="menu-item"><a href="#">Vadare</a></li>
+              <li class="menu-item"><a href="#">Änder</a></li>
             </ul>
           </li>
 
           <li class="menu-item has-submenu">
-            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Däggdjur</a>
-            <ul class="submenu" role="menu" aria-label="Däggdjur">
-              <li class="menu-item"><a role="menuitem" href="#">Rovdjur</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Hjortdjur</a></li>
+            <a aria-haspopup="true" aria-expanded="false" href="#">Däggdjur</a>
+            <ul class="submenu" aria-label="Däggdjur">
+              <li class="menu-item"><a href="#">Rovdjur</a></li>
+              <li class="menu-item"><a href="#">Hjortdjur</a></li>
             </ul>
           </li>
 
           <li class="menu-item has-submenu">
-            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Insekter</a>
-            <ul class="submenu" role="menu" aria-label="Insekter">
-              <li class="menu-item"><a role="menuitem" href="#">Fjärilar</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Trollsländor</a></li>
+            <a aria-haspopup="true" aria-expanded="false" href="#">Insekter</a>
+            <ul class="submenu" aria-label="Insekter">
+              <li class="menu-item"><a href="#">Fjärilar</a></li>
+              <li class="menu-item"><a href="#">Trollsländor</a></li>
             </ul>
           </li>
 
           <li class="menu-item has-submenu">
-            <a role="menuitem" aria-haspopup="true" aria-expanded="false" href="#">Info</a>
-            <ul class="submenu" role="menu" aria-label="Info">
-              <li class="menu-item"><a role="menuitem" href="#">Om sidan</a></li>
-              <li class="menu-item"><a role="menuitem" href="#">Kontakt</a></li>
+            <a aria-haspopup="true" aria-expanded="false" href="#">Info</a>
+            <ul class="submenu" aria-label="Info">
+              <li class="menu-item"><a href="#">Om sidan</a></li>
+              <li class="menu-item"><a href="#">Kontakt</a></li>
             </ul>
           </li>
 
@@ -265,6 +279,7 @@
       Desktop: djupa flyouts vänder vänster och stannar där även vid hover/klick.
       Brand-länk klickbar endast runt texten, inte under hamburgaren.
     </div>
+    <div class="demo-spacer"></div>
   </main>
 
   <script>
@@ -322,7 +337,6 @@
             const opened = li.classList.contains('open');
             if (!opened) {
               ev.preventDefault();
-              closeSiblingsTap(li);
               openTap(li);
               ensureFlipToFit(li);
             }
@@ -352,6 +366,54 @@
         li.addEventListener('focusin', () => { if (isDesktopLayout()) ensureFlipToFit(li); });
       });
 
+      // Enhanced hover behavior for smooth navigation between submenus
+      const mqHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+      if (mqHover.matches) {
+        let hoverTimeouts = new Map();
+        
+        menu.querySelectorAll('.menu-item.has-submenu').forEach(li => {
+          const link = li.querySelector(':scope > a');
+          const submenu = li.querySelector(':scope > .submenu');
+          if (!link || !submenu) return;
+          
+          li.addEventListener('mouseenter', () => {
+            // Only apply hover logic on desktop with fine pointer and hover capability
+            if (!isDesktopLayout() || isTouchPrimary() || !mqHover.matches) return;
+            
+            // Clear any pending close timeout for this item
+            if (hoverTimeouts.has(li)) {
+              clearTimeout(hoverTimeouts.get(li));
+              hoverTimeouts.delete(li);
+            }
+            
+            // Add a class to force display via CSS
+            li.classList.add('hover-open');
+            ensureFlipToFit(li);
+          });
+          
+          li.addEventListener('mouseleave', () => {
+            // Only apply hover logic on desktop with fine pointer and hover capability
+            if (!isDesktopLayout() || isTouchPrimary() || !mqHover.matches) return;
+            
+            // Set a timeout to close after a short delay
+            const timeout = setTimeout(() => {
+              li.classList.remove('hover-open');
+              hoverTimeouts.delete(li);
+            }, 100); // 100ms delay allows moving between submenus
+            
+            hoverTimeouts.set(li, timeout);
+          });
+        });
+        
+        // Clean up hover classes when switching to mobile
+        mqMobile.addEventListener('change', () => {
+          menu.querySelectorAll('.hover-open').forEach(li => {
+            li.classList.remove('hover-open');
+          });
+          hoverTimeouts.clear();
+        });
+      }
+
       // Hamburger open/close (mobile panel)
       const setOpen = (on) => {
         toggle.setAttribute('aria-expanded', String(on));
@@ -378,7 +440,10 @@
       });
 
       // Navigation: push ?cat=slug so you can verify destination without leaving page
-      menu.querySelectorAll('a[role="menuitem"]').forEach((a) => {
+      menu.querySelectorAll('a').forEach((a) => {
+        // Skip search form input
+        if (a.type === 'search') return;
+        
         a.addEventListener('click', (ev) => {
           const parentLi = a.closest('.menu-item');
           const hasSub = parentLi?.classList.contains('has-submenu');
@@ -400,7 +465,14 @@
       });
 
       // Reset states on layout changes
-      mqMobile.addEventListener('change', () => { setOpen(false); closeAllTap(); });
+      mqMobile.addEventListener('change', () => { 
+        setOpen(false); 
+        closeAllTap(); 
+        // Clean up any hover classes when switching layouts
+        menu.querySelectorAll('.hover-open').forEach(li => {
+          li.classList.remove('hover-open');
+        });
+      });
 
       // ---- Mobile height animation helpers ----
       function expandBranch(li) {
@@ -458,7 +530,10 @@
       function openTap(li) {
         const link = li.querySelector(':scope > a');
         if (!li.classList.contains('open')) {
-          closeSiblingsTap(li);
+          // Only close siblings for touch interactions, not for hover/focus
+          if (isTouchPrimary()) {
+            closeSiblingsTap(li);
+          }
           li.classList.add('open');
           link?.setAttribute('aria-expanded', 'true');
         }
