@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ArvidsonFoto.se – Navmeny (mobile toggle anchored + desktop flip)</title>
+  <title>ArvidsonFoto.se – Navmeny (mobile toggle fix + desktop flip specificity)</title>
   <style>
     :root{
       --bar-h: 54px; /* height of header bar */
@@ -20,9 +20,10 @@
       --z-header: 1000;
       --z-backdrop: 900;
 
-      --toggle-touch: 72px;   /* width of right-side toggle */
-      --toggle-minh: 46px;    /* height of toggle */
-      --submenu-gap: 8px;     /* desktop flyout gap */
+      /* Mobile toggle overlay size */
+      --toggle-touch: 72px;   /* width of the right-side overlay */
+      --toggle-minh: 46px;    /* height of the button */
+      --submenu-gap: 8px;     /* gap between desktop flyouts */
     }
 
     * { box-sizing: border-box; }
@@ -32,14 +33,11 @@
 
     /* Header / Bar */
     .site-header { position: sticky; top: 0; z-index: var(--z-header); background: var(--bar-bg); color: var(--bar-fg); box-shadow: 0 1px 0 rgba(255,255,255,.04); }
-    .site-header .bar { height: var(--bar-h); display: grid; grid-template-columns: 1fr max-content; align-items: center; gap: 12px; padding: 0 16px; max-width: 1280px; margin-inline: auto; }
-    .brand {
-      color: var(--bar-fg); text-decoration: none; font-weight: 600; letter-spacing: .2px;
-      display: inline-block; justify-self: start; align-self: center; /* prevent stretching under hamburger */
-    }
+    .site-header .bar { height: var(--bar-h); display: grid; grid-template-columns: auto max-content; align-items: center; gap: 12px; padding: 0 16px; max-width: 1280px; margin-inline: auto; }
+    .brand { color: var(--bar-fg); text-decoration: none; font-weight: 600; letter-spacing: .2px; }
 
     /* Hamburger (mobile) */
-    .menu-toggle { place-self: center end; background: transparent; border: 0; padding: 8px; margin: -8px; cursor: pointer; color: var(--bar-fg); }
+    .menu-toggle { display: none; place-self: center end; background: transparent; border: 0; padding: 8px; margin: -8px; cursor: pointer; color: var(--bar-fg); }
     .menu-toggle-box { display: inline-grid; gap: 4px; }
     .menu-toggle .line { width: 22px; height: 2px; background: currentColor; display: block; border-radius: 2px; }
 
@@ -51,7 +49,7 @@
     .menu > .menu-item.has-submenu > a::after { content: "▾"; margin-left: 6px; font-size: 0.8em; opacity: .7; }
 
     /* Hide mobile "+" buttons by default (desktop) */
-    @media (min-width: 961px) { .submenu-toggle { display: none !important; } }
+    .submenu-toggle { display: none !important; }
 
     /* Submenus (desktop) */
     .submenu {
@@ -97,7 +95,7 @@
       }
     }
 
-    /* Desktop tap-open + flip and strong override for flip while hovered */
+    /* Desktop tap-open + flip and stronger override for flip while hovered */
     @media (min-width: 961px) {
       .menu-item.open > .submenu { display: block; }
       .submenu .menu-item.open > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
@@ -106,7 +104,7 @@
       .submenu .menu-item.open-left > .submenu { left: auto; right: calc(100% + var(--submenu-gap)); }
       .submenu .menu-item.open-left > a::after { content: "◂"; }
 
-      /* Keep flip-left even while hovered/focused (no override back to right) */
+      /* Increase specificity so hover never overrides a flip-left decision */
       .submenu .menu-item.has-submenu.open-left:hover > .submenu,
       .submenu .menu-item.has-submenu.open-left:focus-within > .submenu {
         left: auto !important; right: calc(100% + var(--submenu-gap)) !important;
@@ -123,12 +121,8 @@
 
     /* Mobile */
     @media (max-width: 960px) {
-      .menu { display: block; padding: 8px 10px 32px; }
-      .menu > .menu-item > a {
-        height: auto; padding: 12px 12px; border-radius: 8px;
-        padding-right: calc(var(--toggle-touch) + 24px); /* reserve area for toggle so taps never hit link */
-      }
-      .menu > .menu-item + .menu-item { margin-top: 4px; }
+      .menu-toggle { display: inline-grid; }
+      .site-header .bar { grid-template-columns: 1fr max-content; }
 
       .main-nav {
         position: fixed; inset: var(--bar-h) 0 0 0; background: var(--bar-bg);
@@ -137,16 +131,25 @@
         overflow-y: auto; z-index: calc(var(--z-backdrop) + 1);
       }
       .site-header.nav-open .main-nav { transform: translateY(0); opacity: 1; pointer-events: auto; }
+
       .site-header .backdrop { position: fixed; inset: var(--bar-h) 0 0 0; background: rgba(0,0,0,.4); z-index: var(--z-backdrop); }
       .site-header .backdrop[hidden] { display: none; }
 
-      /* Hide desktop chevrons on mobile */
+      .menu { display: block; padding: 8px 10px 32px; }
+      .menu > .menu-item > a {
+        height: auto; padding: 12px 12px; border-radius: 8px;
+        /* Reserve right side for the overlay toggle so taps there never hit the link */
+        padding-right: calc(var(--toggle-touch) + 24px);
+      }
+      .menu > .menu-item + .menu-item { margin-top: 4px; }
+
+      /* Ensure desktop chevrons never appear in mobile */
       .menu > .menu-item.has-submenu > a::after,
       .submenu .menu-item.has-submenu > a::after { display: none !important; content: none !important; }
 
-      /* Toggle: anchored to parent row (top), fixed height — won't slide into the submenu */
+      /* Full-height-on-row (fixed-height) toggle overlay – centered on the row, not the whole li */
       .submenu-toggle {
-        position: absolute; right: 6px; top: 6px; /* anchor to top of parent row */
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
         z-index: 2;
         width: var(--toggle-touch);
         height: var(--toggle-minh);
@@ -163,11 +166,12 @@
         position: static; display: block; color: var(--bar-fg);
         height: 0; overflow: hidden; transition: height 220ms ease; will-change: height;
 
-        /* Collapsed: fully hidden (no leakage/lines) */
+        /* Collapsed: completely hidden (no lines/leaks) */
         padding: 0; margin: 0; border: 0;
         visibility: hidden; pointer-events: none; contain: layout paint;
         background: transparent;
       }
+      /* Expanded: restore spacing and left guide */
       .menu-item.expanded > .submenu {
         padding: 4px; margin: 4px 0 8px 8px; border-left: 2px solid #2a2f35;
         visibility: visible; pointer-events: auto; background: #111418;
@@ -175,10 +179,6 @@
 
       /* Allow wrapping in mobile */
       .submenu .menu-item > a { color: #d9dde2; padding: 10px 10px; border-radius: 6px; white-space: normal; }
-
-      /* Brand and hamburger both visible on mobile */
-      .menu-toggle { display: inline-grid; }
-      .site-header .bar { grid-template-columns: 1fr max-content; }
     }
 
     /* Active state hint */
@@ -188,7 +188,6 @@
     /* Demo content area */
     .content { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
     .card { background:#111418; border:1px solid #23272f; border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.2); margin: 12px 0; }
-    .demo-spacer { height: 900px; }
   </style>
 </head>
 <body>
@@ -275,11 +274,9 @@
 
   <main class="content">
     <div class="card">
-      Mobil: toggle är förankrad vid överkanten av föräldrarnas rad (flyttar sig inte).
-      Desktop: djupa flyouts vänder vänster och stannar där även vid hover/klick.
-      Brand-länk klickbar endast runt texten, inte under hamburgaren.
+      Mobil: Toggleknappen ligger nu på radens höjd, täcker inte andra knappar och är lätt att träffa. Desktop: vänster‑flip har högre specificitet (ingen “studs” till höger).
     </div>
-    <div class="demo-spacer"></div>
+    <div style="height:900px"></div>
   </main>
 
   <script>
@@ -321,7 +318,7 @@
         btn.innerHTML = '<span class="icon" aria-hidden="true">+</span>';
         li.insertBefore(btn, sub);
 
-        // Ensure pointer goes to toggle (prevents link mis-taps)
+        // Prevent mis-taps: the overlay captures pointer before link
         btn.addEventListener('pointerdown', (e) => { e.stopPropagation(); }, { passive: true });
         btn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -361,7 +358,7 @@
           }
         });
 
-        // Desktop hover/focus: evaluate flip when showing
+        // Desktop hover/focus: check for flip when showing
         li.addEventListener('pointerenter', () => { if (isDesktopLayout()) ensureFlipToFit(li); });
         li.addEventListener('focusin', () => { if (isDesktopLayout()) ensureFlipToFit(li); });
       });
@@ -440,14 +437,13 @@
       });
 
       // Navigation: push ?cat=slug so you can verify destination without leaving page
-      menu.querySelectorAll('a').forEach((a) => {
-        // Skip search form input
-        if (a.type === 'search') return;
-        
+      menu.querySelectorAll('a[role="menuitem"]').forEach((a) => {
         a.addEventListener('click', (ev) => {
+          // If this click was used to open a submenu on touch-desktop, ignore
           const parentLi = a.closest('.menu-item');
           const hasSub = parentLi?.classList.contains('has-submenu');
           const isTouchDesktopOpenAction = isDesktopLayout() && isTouchPrimary() && hasSub && !parentLi.classList.contains('open');
+
           if (isTouchDesktopOpenAction) return; // handled above
 
           ev.preventDefault();
@@ -456,7 +452,7 @@
           const url = new URL(window.location.href);
           url.searchParams.set('cat', slug);
           history.pushState({ cat: slug }, '', url);
-
+          // Optional: highlight current
           menu.querySelectorAll('a[aria-current="page"]').forEach(el => el.removeAttribute('aria-current'));
           a.setAttribute('aria-current', 'page');
 
@@ -566,31 +562,28 @@
         const sub = li.querySelector(':scope > .submenu');
         if (!sub) return;
 
-        // Measure before visible; avoid flicker with visibility: hidden
-        const prevDisplay = sub.style.display;
-        const prevVis = sub.style.visibility;
-        const wasHidden = getComputedStyle(sub).display === 'none';
-        if (wasHidden) {
-          sub.style.visibility = 'hidden';
-          sub.style.display = 'block';
-        }
-
-        // Use next frame after display change for correct metrics
         requestAnimationFrame(() => {
-          const rect = sub.getBoundingClientRect();
-          const rightOverflow = rect.right > (window.innerWidth - 8);
-          const leftOverflow = rect.left < 8;
-
-          if (rightOverflow && !leftOverflow) {
-            li.classList.add('open-left');
-          } else {
-            li.classList.remove('open-left');
-          }
-
+          const wasHidden = getComputedStyle(sub).display === 'none';
           if (wasHidden) {
-            sub.style.display = prevDisplay || '';
-            sub.style.visibility = prevVis || '';
+            sub.style.visibility = 'hidden';
+            sub.style.display = 'block';
           }
+          requestAnimationFrame(() => {
+            const rect = sub.getBoundingClientRect();
+            const rightOverflow = rect.right > (window.innerWidth - 8);
+            const leftOverflow = rect.left < 8;
+
+            if (rightOverflow && !leftOverflow) {
+              li.classList.add('open-left');
+            } else {
+              li.classList.remove('open-left');
+            }
+
+            if (wasHidden) {
+              sub.style.display = '';
+              sub.style.visibility = '';
+            }
+          });
         });
       }
 
