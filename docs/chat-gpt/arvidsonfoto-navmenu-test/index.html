@@ -295,13 +295,14 @@
 
       /* Accordion behavior: height animation; collapsed state completely hidden (no leak) */
       .submenu-toggle {
-        position: absolute; right: 10px; top: 6px; z-index: 15;
+        position: absolute; right: -5px; top: -2px; z-index: 15;
         background: #262a2f; color: var(--bar-fg);
         border: 1px solid #343a40; border-radius: 12px;
         width: calc(var(--toggle-touch) + 10px); height: var(--toggle-height);
         display: grid !important; place-items: center;
         touch-action: manipulation;
         pointer-events: auto; /* Ensure button is clickable */
+        padding: 1em; /* Increase touch area for easier tapping */
       }
       
       /* Ensure parent menu items maintain positioning context for buttons */
