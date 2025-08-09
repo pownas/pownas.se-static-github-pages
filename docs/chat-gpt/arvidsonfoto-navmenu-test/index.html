@@ -313,8 +313,15 @@
       
       /* Reset large-menu flexbox layout for mobile - make it behave like normal submenu */
       .menu-item .submenu.large-menu {
-        display: block; /* Override flex display */
+        display: block !important; /* Override flex display strongly */
         flex-direction: initial;
+        position: static !important; /* Reset positioning */
+        min-width: auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
       }
       
       /* Reset the container wrapper for mobile - make it behave normally */
@@ -322,6 +329,7 @@
         padding: 0; /* Remove desktop padding */
         overflow-y: visible; /* Remove desktop scrolling */
         flex: none; /* Remove flex behavior */
+        display: block; /* Ensure normal block display */
       }
       
       /* Hide scroll arrows on mobile */
