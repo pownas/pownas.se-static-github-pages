@@ -190,7 +190,7 @@
     .submenu .menu-item.has-submenu > a::after { content: "▸"; margin-left: auto; color: #6b7280; }
 
     /* Show on hover/focus (desktop with mouse) and add gap */
-    @media (hover: hover) and (pointer: fine) {
+    @media (hover: hover) and (pointer: fine) and (min-width: 961px) {
       .menu > .menu-item.has-submenu:hover > .submenu { display: block; }
       .submenu .menu-item.has-submenu:hover > .submenu:not(.large-menu) { 
         display: block; 
@@ -206,7 +206,7 @@
         position: absolute !important; 
       }
       
-      /* Ensure hover rules take precedence over .open class */
+      /* Ensure hover rules take precedence over .open class - DESKTOP ONLY */
       .submenu .menu-item.has-submenu:not(:hover) > .submenu.large-menu { 
         display: none !important; 
       }
