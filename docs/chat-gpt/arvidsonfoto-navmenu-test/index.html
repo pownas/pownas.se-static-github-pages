@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ArvidsonFoto.se – Navmeny Preview (flip + mobile UX)</title>
+  <title>ArvidsonFoto.se – Navmeny Preview (flip, no-leak, bigger toggle)</title>
   <style>
     :root{
       --bar-h: 54px;
@@ -21,7 +21,9 @@
       --z-backdrop: 900;
 
       /* Mobile toggle hit area */
-      --toggle-touch: 64px; /* total clickable width for the +/× button */
+      --toggle-touch: 68px;   /* wider */
+      --toggle-height: 46px;  /* taller */
+      --submenu-gap: 8px;     /* gap between flyouts */
     }
 
     * { box-sizing: border-box; }
@@ -58,33 +60,41 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       display: none;
+      z-index: 10; /* base layer */
     }
+    /* raise z-index for deeper levels to prevent overlap bleed */
+    .submenu .submenu { z-index: 11; }
+    .submenu .submenu .submenu { z-index: 12; }
+    .submenu .submenu .submenu .submenu { z-index: 13; }
+
     .menu-item.has-submenu { position: relative; }
     .menu-item .submenu .menu-item { position: relative; }
+
     .submenu .menu-item > a {
       display: flex; align-items: center;
       min-height: 40px; padding: 8px 12px; border-radius: 6px;
       color: var(--submenu-fg); text-decoration: none;
+      white-space: nowrap; /* prevent wrapping causing overlap */
     }
     .submenu .menu-item > a:hover, .submenu .menu-item > a:focus-visible { background: #e7eaee; outline: none; color:#111; }
     .submenu .menu-item.has-submenu > a::after { content: "▸"; margin-left: auto; color: #6b7280; }
 
-    /* Show on hover/focus (desktop with mouse) */
+    /* Show on hover/focus (desktop with mouse) and add gap */
     @media (hover: hover) and (pointer: fine) {
       .menu > .menu-item.has-submenu:hover > .submenu,
       .menu > .menu-item.has-submenu:focus-within > .submenu { display: block; }
       .submenu .menu-item.has-submenu:hover > .submenu,
-      .submenu .menu-item.has-submenu:focus-within > .submenu { display: block; left: 100%; top: -8px; }
+      .submenu .menu-item.has-submenu:focus-within > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
     }
 
-    /* Desktop flip: if we add .open-left on li, open submenu to the left to keep inside viewport */
+    /* Desktop explicit tap-open and flipping logic */
     @media (min-width: 961px) {
-      .menu-item.open > .submenu { display: block; } /* tap-to-open state */
-      .submenu .menu-item.open > .submenu { display: block; left: 100%; top: -8px; }
+      .menu-item.open > .submenu { display: block; }
+      .submenu .menu-item.open > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
 
       /* Flip rules */
-      .menu-item.open-left > .submenu { left: auto; right: 0; } /* top-level dropdown flip (rare) */
-      .submenu .menu-item.open-left > .submenu { left: auto; right: 100%; } /* nested flyout flip */
+      .menu-item.open-left > .submenu { left: auto; right: 0; } /* top-level dropdown flip */
+      .submenu .menu-item.open-left > .submenu { left: auto; right: calc(100% + var(--submenu-gap)); }
       .submenu .menu-item.open-left > a::after { content: "◂"; }
     }
 
@@ -119,18 +129,23 @@
       }
       .menu > .menu-item + .menu-item { margin-top: 4px; }
 
+      /* Hide all desktop chevrons in mobile (force) */
+      .menu > .menu-item.has-submenu > a::after,
+      .submenu .menu-item.has-submenu > a::after { display: none !important; content: none !important; }
+
       /* Reserve space on the right for the toggle to avoid accidental link taps */
       .menu > .menu-item.has-submenu > a,
       .submenu .menu-item.has-submenu > a {
-        padding-right: calc(var(--toggle-touch) + 18px);
+        padding-right: calc(var(--toggle-touch) + 20px);
       }
 
-      /* Accordion behavior: height animation; collapsed state has no spacing/border to avoid leaks */
+      /* Accordion behavior: height animation; collapsed state completely hidden (no leak) */
       .submenu-toggle {
-        position: absolute; right: 8px; top: 4px; z-index: 2;
+        position: absolute; right: 6px; top: 3px; z-index: 2;
         background: #262a2f; color: var(--bar-fg);
-        border: 1px solid #343a40; border-radius: 10px;
-        width: var(--toggle-touch); height: 44px; display: grid !important; place-items: center;
+        border: 1px solid #343a40; border-radius: 12px;
+        width: calc(var(--toggle-touch) + 10px); height: var(--toggle-height);
+        display: grid !important; place-items: center;
         touch-action: manipulation;
       }
       .submenu-toggle .icon { transition: transform var(--speed); font-size: 18px; }
@@ -141,16 +156,18 @@
         position: static; display: block; background: #111418; color: var(--bar-fg);
         height: 0; overflow: hidden; transition: height 220ms ease; will-change: height;
 
-        /* Collapsed (no visual leak) */
-        padding: 0; margin: 0; border-left: 0 solid #2a2f35; border-radius: 10px;
+        /* Collapsed: ensure no artifacts/lines */
+        padding: 0; margin: 0; border: 0; border-left-width: 0;
+        visibility: hidden; pointer-events: none;
+        contain: layout paint;  /* avoid subpixel leaks */
       }
-      /* Expanded spacing restored (padding/margin applied when li.expanded) */
+      /* Expanded spacing restored and visible */
       .menu-item.expanded > .submenu {
-        padding: 4px; margin: 4px 0 8px 8px; border-left-width: 2px;
+        padding: 4px; margin: 4px 0 8px 8px; border-left: 2px solid #2a2f35;
+        visibility: visible; pointer-events: auto;
       }
 
       .submenu .menu-item > a { color: #d9dde2; padding: 10px 10px; border-radius: 6px; }
-      .submenu .menu-item.has-submenu > a::after { display: none; }
     }
 
     /* Active state hint */
@@ -246,7 +263,7 @@
 
   <main class="content">
     <div class="card">
-      Förbättringar: (1) Desktop-flyout vänder åt vänster om den annars hamnar utanför vyn. (2) På mobil är +/×‑knappar större och tar över höger sida för att undvika feltryck. (3) Inga visuella läckor när nivåer stängs.
+      Fixar: (1) Desktop-flyout vänder åt vänster med mellanrum och rätt z-index om annars utanför vyn. (2) Mobil: större +/×, höger sida reserverad för togglen – inga feltryck på länken. (3) Inga linjer/läckage när nivåer stängs.
     </div>
     <div style="height:900px"></div>
   </main>
@@ -292,6 +309,7 @@
 
         // Mobile accordion: height-to-auto animation (no leaks)
         btn.addEventListener('click', (e) => {
+          e.preventDefault();
           e.stopPropagation();
           const expanding = !li.classList.contains('expanded');
           if (expanding) expandBranch(li);
@@ -306,7 +324,6 @@
               ev.preventDefault();
               closeSiblingsTap(li);
               openTap(li);
-              // After opening on touch, ensure flip if near viewport edge
               ensureFlipToFit(li);
             }
           }
@@ -378,7 +395,7 @@
         const start = sub.getBoundingClientRect().height;
         sub.style.height = start + 'px';
         requestAnimationFrame(() => {
-          const target = sub.scrollHeight; // includes padding now that li.expanded applied spacing
+          const target = sub.scrollHeight;
           sub.style.height = target + 'px';
         });
         const onEnd = (ev) => {
@@ -449,9 +466,8 @@
         const sub = li.querySelector(':scope > .submenu');
         if (!sub) return;
 
-        // Wait for CSS to show it (hover/open) then measure
+        // Wait for CSS to show it, then measure
         requestAnimationFrame(() => {
-          // If still hidden (e.g., touch open just set .open), we should be able to measure; if not, force a temporary measure pass
           const wasHidden = getComputedStyle(sub).display === 'none';
           if (wasHidden) {
             sub.style.visibility = 'hidden';
