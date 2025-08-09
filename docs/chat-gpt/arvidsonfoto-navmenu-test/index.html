@@ -165,8 +165,7 @@
     /* Show large menus in columns on hover/focus (desktop with mouse) */
     @media (hover: hover) and (pointer: fine) {
       /* Only show large menus when hovering directly over their parent, not grandparent */
-      .submenu .menu-item.has-submenu:hover > .submenu.large-menu,
-      .submenu .menu-item.has-submenu:focus-within > .submenu.large-menu { 
+      .submenu .menu-item.has-submenu:hover > .submenu.large-menu { 
         display: flex; 
         left: calc(100% + var(--submenu-gap)); 
         top: -8px; 
@@ -192,13 +191,24 @@
 
     /* Show on hover/focus (desktop with mouse) and add gap */
     @media (hover: hover) and (pointer: fine) {
-      .menu > .menu-item.has-submenu:hover > .submenu,
-      .menu > .menu-item.has-submenu:focus-within > .submenu { display: block; }
-      .submenu .menu-item.has-submenu:hover > .submenu:not(.large-menu),
-      .submenu .menu-item.has-submenu:focus-within > .submenu:not(.large-menu) { 
+      .menu > .menu-item.has-submenu:hover > .submenu { display: block; }
+      .submenu .menu-item.has-submenu:hover > .submenu:not(.large-menu) { 
         display: block; 
         left: calc(100% + var(--submenu-gap)); 
         top: -8px; 
+      }
+      
+      /* IMPORTANT: Override .open class rules with higher specificity for hover */
+      .submenu .menu-item.has-submenu:hover > .submenu.large-menu { 
+        display: flex !important; 
+        left: calc(100% + var(--submenu-gap)) !important; 
+        top: -8px !important; 
+        position: absolute !important; 
+      }
+      
+      /* Ensure hover rules take precedence over .open class */
+      .submenu .menu-item.has-submenu:not(:hover) > .submenu.large-menu { 
+        display: none !important; 
       }
       
       /* Add hover tolerance - keep parent menus open when hovering near submenus */
@@ -372,6 +382,12 @@
 
     /* Desktop: reset submenu colors back to proper light background scheme */
     @media (min-width: 961px) {
+      /* Reset main menu items to proper desktop colors */
+      .menu > .menu-item > a {
+        color: var(--bar-fg) !important; /* Ensure proper light text on dark background */
+      }
+      
+      /* Reset submenu items to proper desktop colors */
       .submenu .menu-item > a { 
         color: var(--submenu-fg) !important; /* Reset to dark text for light backgrounds */
       }
