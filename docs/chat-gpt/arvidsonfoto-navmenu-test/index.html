@@ -23,7 +23,7 @@
       /* Mobile toggle hit area */
       --toggle-touch: 68px;   /* wider */
       --toggle-height: 46px;  /* taller */
-      --submenu-gap: 8px;     /* gap between flyouts */
+      --submenu-gap: -2px;    /* overlap slightly to prevent hover loss */
     }
 
     * { box-sizing: border-box; }
@@ -62,6 +62,117 @@
       display: none;
       z-index: 10; /* base layer */
     }
+    
+    /* For very long submenus like Fjärilar, make them scrollable within viewport */
+    .submenu.large-menu {
+      min-width: 280px; /* Standard width, not too wide */
+      max-width: 320px;
+      max-height: 70vh; /* Stay within viewport height */
+      position: relative; /* For scroll arrows positioning */
+      padding: 0; /* Remove default padding, add to scroll area instead */
+      
+      /* Custom scrollbar for better appearance */
+      scrollbar-width: thin;
+      scrollbar-color: #aaa transparent;
+    }
+    
+    /* Create a scrollable inner container for menu items */
+    .submenu.large-menu {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Fixed scroll arrows */
+    .submenu.large-menu::before,
+    .submenu.large-menu::after {
+      content: '';
+      position: relative;
+      height: 20px;
+      background: var(--submenu-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #666;
+      cursor: pointer;
+      z-index: 2;
+      pointer-events: auto;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      flex-shrink: 0; /* Don't shrink these elements */
+    }
+    
+    /* Up arrow - fixed at top */
+    .submenu.large-menu::before {
+      content: '▲';
+      border-bottom: 1px solid var(--submenu-border);
+      border-top-left-radius: var(--radius);
+      border-top-right-radius: var(--radius);
+    }
+    
+    /* Down arrow - fixed at bottom */
+    .submenu.large-menu::after {
+      content: '▼';
+      border-top: 1px solid var(--submenu-border);
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
+    }
+    
+    /* Scrollable content area between arrows */
+    .submenu.large-menu .menu-items-container {
+      flex: 1;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      padding: 8px; /* Move padding here from parent */
+    }
+    
+    /* Show arrows when menu is hovered and scrollable */
+    .submenu.large-menu:hover::before,
+    .submenu.large-menu:hover::after {
+      opacity: 1;
+    }
+    
+    /* Hide up arrow when at top, down arrow when at bottom */
+    .submenu.large-menu.at-top::before {
+      opacity: 0 !important;
+    }
+    
+    .submenu.large-menu.at-bottom::after {
+      opacity: 0 !important;
+    }
+    
+    /* Webkit scrollbar styling for the scrollable container */
+    .submenu.large-menu .menu-items-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .submenu.large-menu .menu-items-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .submenu.large-menu .menu-items-container::-webkit-scrollbar-thumb {
+      background: #aaa;
+      border-radius: 3px;
+    }
+    .submenu.large-menu .menu-items-container::-webkit-scrollbar-thumb:hover {
+      background: #888;
+    }
+    
+    /* Remove column layout - keep items in single column for better scrolling */
+    .submenu.large-menu .menu-item {
+      break-inside: auto;
+      page-break-inside: auto;
+    }
+    
+    /* Show large menus in columns on hover/focus (desktop with mouse) */
+    @media (hover: hover) and (pointer: fine) {
+      /* Only show large menus when hovering directly over their parent, not grandparent */
+      .submenu .menu-item.has-submenu:hover > .submenu.large-menu,
+      .submenu .menu-item.has-submenu:focus-within > .submenu.large-menu { 
+        display: flex; 
+        left: calc(100% + var(--submenu-gap)); 
+        top: -8px; 
+        position: absolute; /* Ensure it doesn't expand parent menu */
+      }
+    }
     /* raise z-index for deeper levels to prevent overlap bleed */
     .submenu .submenu { z-index: 11; }
     .submenu .submenu .submenu { z-index: 12; }
@@ -83,18 +194,50 @@
     @media (hover: hover) and (pointer: fine) {
       .menu > .menu-item.has-submenu:hover > .submenu,
       .menu > .menu-item.has-submenu:focus-within > .submenu { display: block; }
-      .submenu .menu-item.has-submenu:hover > .submenu,
-      .submenu .menu-item.has-submenu:focus-within > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
+      .submenu .menu-item.has-submenu:hover > .submenu:not(.large-menu),
+      .submenu .menu-item.has-submenu:focus-within > .submenu:not(.large-menu) { 
+        display: block; 
+        left: calc(100% + var(--submenu-gap)); 
+        top: -8px; 
+      }
+      
+      /* Add hover tolerance - keep parent menus open when hovering near submenus */
+      .menu-item.has-submenu::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        bottom: -4px;
+        left: -4px;
+        z-index: -1;
+        pointer-events: auto;
+      }
+      
+      /* Extend hover area for nested submenus to prevent closing */
+      .submenu .menu-item.has-submenu::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: -6px;
+        bottom: 0;
+        width: 6px;
+        pointer-events: auto;
+        z-index: 1;
+      }
     }
 
     /* Desktop explicit tap-open and flipping logic */
     @media (min-width: 961px) {
       .menu-item.open > .submenu { display: block; }
+      .menu-item.open > .submenu.large-menu { display: flex; }
       .submenu .menu-item.open > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
+      .submenu .menu-item.open > .submenu.large-menu { display: flex; left: calc(100% + var(--submenu-gap)); top: -8px; position: absolute; }
 
       /* Flip rules */
       .menu-item.open-left > .submenu { left: auto; right: 0; } /* top-level dropdown flip */
+      .menu-item.open-left > .submenu.large-menu { left: auto; right: 0; } /* large menu flip */
       .submenu .menu-item.open-left > .submenu { left: auto; right: calc(100% + var(--submenu-gap)); }
+      .submenu .menu-item.open-left > .submenu.large-menu { left: auto; right: calc(100% + var(--submenu-gap)); }
       .submenu .menu-item.open-left > a::after { content: "◂"; }
     }
 
@@ -160,6 +303,31 @@
         padding: 0; margin: 0; border: 0; border-left-width: 0;
         visibility: hidden; pointer-events: none;
         contain: layout paint;  /* avoid subpixel leaks */
+        
+        /* Reset column layout for mobile */
+        column-count: 1;
+        min-width: auto;
+        max-width: none;
+        max-height: none;
+      }
+      
+      /* Reset large-menu flexbox layout for mobile - make it behave like normal submenu */
+      .menu-item .submenu.large-menu {
+        display: block; /* Override flex display */
+        flex-direction: initial;
+      }
+      
+      /* Reset the container wrapper for mobile - make it behave normally */
+      .menu-item .submenu.large-menu .menu-items-container {
+        padding: 0; /* Remove desktop padding */
+        overflow-y: visible; /* Remove desktop scrolling */
+        flex: none; /* Remove flex behavior */
+      }
+      
+      /* Hide scroll arrows on mobile */
+      .menu-item .submenu.large-menu::before,
+      .menu-item .submenu.large-menu::after {
+        display: none;
       }
       /* Expanded spacing restored and visible */
       .menu-item.expanded > .submenu {
@@ -239,126 +407,128 @@
             <ul class="submenu" aria-label="Insekter">
               <li class="menu-item has-submenu">
                 <a aria-haspopup="true" aria-expanded="false" href="#">Fjärilar</a>
-                <ul class="submenu" aria-label="Fjärilar">
-                  <li class="menu-item"><a href="#">Alkonblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Allmän poppelglasvinge</a></li>
-                  <li class="menu-item"><a href="#">Almsnabbvinge</a></li>
-                  <li class="menu-item"><a href="#">Amiral</a></li>
-                  <li class="menu-item"><a href="#">Apollofjäril</a></li>
-                  <li class="menu-item"><a href="#">Asknätfjäril</a></li>
-                  <li class="menu-item"><a href="#">Aspfjäril</a></li>
-                  <li class="menu-item"><a href="#">Aspskimmerfjäril</a></li>
-                  <li class="menu-item"><a href="#">Aurorafjäril</a></li>
-                  <li class="menu-item"><a href="#">Berggräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Blåfläckig träfjäril</a></li>
-                  <li class="menu-item"><a href="#">Bredbrämad bastardsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Brun björnspinnare</a></li>
-                  <li class="menu-item"><a href="#">Brun blåvinge</a></li>
-                  <li class="menu-item"><a href="#">Brun gräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Brunfläckig pärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Brunsprötad skymningssvärmare</a></li>
-                  <li class="menu-item"><a href="#">Busksnabbvinge</a></li>
-                  <li class="menu-item"><a href="#">Citronfjäril</a></li>
-                  <li class="menu-item"><a href="#">Dårgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Eksnabbvinge</a></li>
-                  <li class="menu-item"><a href="#">Ekspinnare</a></li>
-                  <li class="menu-item"><a href="#">Eldsnabbvinge</a></li>
-                  <li class="menu-item"><a href="#">Fetörtsblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Fjällbastardsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Fjällgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Fjällhöfjäril</a></li>
-                  <li class="menu-item"><a href="#">Fjällpärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Fjällvickerblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Gräsulv</a></li>
-                  <li class="menu-item"><a href="#">Grönfläckig vitfjäril</a></li>
-                  <li class="menu-item"><a href="#">Grönsnabbvinge</a></li>
-                  <li class="menu-item"><a href="#">Gullvivefjäril</a></li>
-                  <li class="menu-item"><a href="#">Hagtornsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Hedpärlemofjäril</a></li>
-                  <li class="menu-item"><a href="#">Humlelik dagsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Kamgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Karminspinnare</a></li>
-                  <li class="menu-item"><a href="#">Kartfjäril</a></li>
-                  <li class="menu-item"><a href="#">Kattunvisslare</a></li>
-                  <li class="menu-item"><a href="#">Klubbsprötad bastardsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Klöverblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Krattsnabbvinge</a></li>
-                  <li class="menu-item"><a href="#">Kvickgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Körsbärsfux</a></li>
-                  <li class="menu-item"><a href="#">Kålfjäril</a></li>
-                  <li class="menu-item"><a href="#">Ligustersvärmare</a></li>
-                  <li class="menu-item"><a href="#">Ljungblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Ljusgul höfjäril</a></li>
-                  <li class="menu-item"><a href="#">Luktgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Makaonfjäril</a></li>
-                  <li class="menu-item"><a href="#">Mindre bastardsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Mindre blåvinge</a></li>
-                  <li class="menu-item"><a href="#">Mindre guldvinge</a></li>
-                  <li class="menu-item"><a href="#">Mindre påfågelspinnare</a></li>
-                  <li class="menu-item"><a href="#">Mindre snabelsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Mindre tåtelsmygare</a></li>
-                  <li class="menu-item"><a href="#">Mnemosynefjäril</a></li>
-                  <li class="menu-item"><a href="#">Myrpärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Nässelfjäril</a></li>
-                  <li class="menu-item"><a href="#">Oxhuvudspinnare</a></li>
-                  <li class="menu-item"><a href="#">Poppelsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Prydlig pärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Puktörneblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Pärlgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Påfågelöga</a></li>
-                  <li class="menu-item"><a href="#">Rapsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Rovfjäril</a></li>
-                  <li class="menu-item"><a href="#">Rödfläckig blåvinge</a></li>
-                  <li class="menu-item"><a href="#">Sandgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Sexfläckig bastardsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Silverblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Silversmygare</a></li>
-                  <li class="menu-item"><a href="#">Silverstreckad pärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Skogsgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Skogsnätfjäril</a></li>
-                  <li class="menu-item"><a href="#">Skogspärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Skogsvisslare</a></li>
-                  <li class="menu-item"><a href="#">Skogsvitvinge</a></li>
-                  <li class="menu-item"><a href="#">Slåttergräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Smultronvisslare</a></li>
-                  <li class="menu-item"><a href="#">Sorgmantel</a></li>
-                  <li class="menu-item"><a href="#">Sotnätfjäril</a></li>
-                  <li class="menu-item"><a href="#">Starrgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Stor dagsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Storfläckig pärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Större snabelsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Större träfjäril</a></li>
-                  <li class="menu-item"><a href="#">Svartfläckig blåvinge</a></li>
-                  <li class="menu-item"><a href="#">Svartfläckig glanssmygare</a></li>
-                  <li class="menu-item"><a href="#">Svavelgul höfjäril</a></li>
-                  <li class="menu-item"><a href="#">Svingelgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Svävfluglik dagsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Sälgskimmerfjäril</a></li>
-                  <li class="menu-item"><a href="#">Tallgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Tallprocessionsspinnare</a></li>
-                  <li class="menu-item"><a href="#">Tallsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Tistelfjäril</a></li>
-                  <li class="menu-item"><a href="#">Tosteblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Tryfjäril</a></li>
-                  <li class="menu-item"><a href="#">Turkos blåvinge</a></li>
-                  <li class="menu-item"><a href="#">Tåtelsmygare</a></li>
-                  <li class="menu-item"><a href="#">Videfux</a></li>
-                  <li class="menu-item"><a href="#">Videsvärmare</a></li>
-                  <li class="menu-item"><a href="#">Vinbärsfux</a></li>
-                  <li class="menu-item"><a href="#">Vinkelbandat ordensfly</a></li>
-                  <li class="menu-item"><a href="#">Violett blåvinge</a></li>
-                  <li class="menu-item"><a href="#">Violett guldvinge</a></li>
-                  <li class="menu-item"><a href="#">Violettkantad guldvinge</a></li>
-                  <li class="menu-item"><a href="#">Vitfläckig guldvinge</a></li>
-                  <li class="menu-item"><a href="#">Vitgräsfjäril</a></li>
-                  <li class="menu-item"><a href="#">Väddnätfjäril</a></li>
-                  <li class="menu-item"><a href="#">Älggräspärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Ängsblåvinge</a></li>
-                  <li class="menu-item"><a href="#">Ängsmetallvinge</a></li>
-                  <li class="menu-item"><a href="#">Ängsnätfjäril</a></li>
-                  <li class="menu-item"><a href="#">Ängspärlemorfjäril</a></li>
-                  <li class="menu-item"><a href="#">Ängssmygare</a></li>
-                  <li class="menu-item"><a href="#">Åkervindesvärmare</a></li>
+                <ul class="submenu large-menu" aria-label="Fjärilar">
+                  <div class="menu-items-container">
+                    <li class="menu-item"><a href="#">Alkonblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Allmän poppelglasvinge</a></li>
+                    <li class="menu-item"><a href="#">Almsnabbvinge</a></li>
+                    <li class="menu-item"><a href="#">Amiral</a></li>
+                    <li class="menu-item"><a href="#">Apollofjäril</a></li>
+                    <li class="menu-item"><a href="#">Asknätfjäril</a></li>
+                    <li class="menu-item"><a href="#">Aspfjäril</a></li>
+                    <li class="menu-item"><a href="#">Aspskimmerfjäril</a></li>
+                    <li class="menu-item"><a href="#">Aurorafjäril</a></li>
+                    <li class="menu-item"><a href="#">Berggräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Blåfläckig träfjäril</a></li>
+                    <li class="menu-item"><a href="#">Bredbrämad bastardsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Brun björnspinnare</a></li>
+                    <li class="menu-item"><a href="#">Brun blåvinge</a></li>
+                    <li class="menu-item"><a href="#">Brun gräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Brunfläckig pärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Brunsprötad skymningssvärmare</a></li>
+                    <li class="menu-item"><a href="#">Busksnabbvinge</a></li>
+                    <li class="menu-item"><a href="#">Citronfjäril</a></li>
+                    <li class="menu-item"><a href="#">Dårgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Eksnabbvinge</a></li>
+                    <li class="menu-item"><a href="#">Ekspinnare</a></li>
+                    <li class="menu-item"><a href="#">Eldsnabbvinge</a></li>
+                    <li class="menu-item"><a href="#">Fetörtsblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Fjällbastardsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Fjällgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Fjällhöfjäril</a></li>
+                    <li class="menu-item"><a href="#">Fjällpärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Fjällvickerblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Gräsulv</a></li>
+                    <li class="menu-item"><a href="#">Grönfläckig vitfjäril</a></li>
+                    <li class="menu-item"><a href="#">Grönsnabbvinge</a></li>
+                    <li class="menu-item"><a href="#">Gullvivefjäril</a></li>
+                    <li class="menu-item"><a href="#">Hagtornsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Hedpärlemofjäril</a></li>
+                    <li class="menu-item"><a href="#">Humlelik dagsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Kamgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Karminspinnare</a></li>
+                    <li class="menu-item"><a href="#">Kartfjäril</a></li>
+                    <li class="menu-item"><a href="#">Kattunvisslare</a></li>
+                    <li class="menu-item"><a href="#">Klubbsprötad bastardsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Klöverblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Krattsnabbvinge</a></li>
+                    <li class="menu-item"><a href="#">Kvickgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Körsbärsfux</a></li>
+                    <li class="menu-item"><a href="#">Kålfjäril</a></li>
+                    <li class="menu-item"><a href="#">Ligustersvärmare</a></li>
+                    <li class="menu-item"><a href="#">Ljungblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Ljusgul höfjäril</a></li>
+                    <li class="menu-item"><a href="#">Luktgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Makaonfjäril</a></li>
+                    <li class="menu-item"><a href="#">Mindre bastardsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Mindre blåvinge</a></li>
+                    <li class="menu-item"><a href="#">Mindre guldvinge</a></li>
+                    <li class="menu-item"><a href="#">Mindre påfågelspinnare</a></li>
+                    <li class="menu-item"><a href="#">Mindre snabelsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Mindre tåtelsmygare</a></li>
+                    <li class="menu-item"><a href="#">Mnemosynefjäril</a></li>
+                    <li class="menu-item"><a href="#">Myrpärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Nässelfjäril</a></li>
+                    <li class="menu-item"><a href="#">Oxhuvudspinnare</a></li>
+                    <li class="menu-item"><a href="#">Poppelsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Prydlig pärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Puktörneblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Pärlgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Påfågelöga</a></li>
+                    <li class="menu-item"><a href="#">Rapsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Rovfjäril</a></li>
+                    <li class="menu-item"><a href="#">Rödfläckig blåvinge</a></li>
+                    <li class="menu-item"><a href="#">Sandgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Sexfläckig bastardsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Silverblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Silversmygare</a></li>
+                    <li class="menu-item"><a href="#">Silverstreckad pärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Skogsgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Skogsnätfjäril</a></li>
+                    <li class="menu-item"><a href="#">Skogspärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Skogsvisslare</a></li>
+                    <li class="menu-item"><a href="#">Skogsvitvinge</a></li>
+                    <li class="menu-item"><a href="#">Slåttergräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Smultronvisslare</a></li>
+                    <li class="menu-item"><a href="#">Sorgmantel</a></li>
+                    <li class="menu-item"><a href="#">Sotnätfjäril</a></li>
+                    <li class="menu-item"><a href="#">Starrgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Stor dagsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Storfläckig pärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Större snabelsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Större träfjäril</a></li>
+                    <li class="menu-item"><a href="#">Svartfläckig blåvinge</a></li>
+                    <li class="menu-item"><a href="#">Svartfläckig glanssmygare</a></li>
+                    <li class="menu-item"><a href="#">Svavelgul höfjäril</a></li>
+                    <li class="menu-item"><a href="#">Svingelgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Svävfluglik dagsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Sälgskimmerfjäril</a></li>
+                    <li class="menu-item"><a href="#">Tallgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Tallprocessionsspinnare</a></li>
+                    <li class="menu-item"><a href="#">Tallsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Tistelfjäril</a></li>
+                    <li class="menu-item"><a href="#">Tosteblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Tryfjäril</a></li>
+                    <li class="menu-item"><a href="#">Turkos blåvinge</a></li>
+                    <li class="menu-item"><a href="#">Tåtelsmygare</a></li>
+                    <li class="menu-item"><a href="#">Videfux</a></li>
+                    <li class="menu-item"><a href="#">Videsvärmare</a></li>
+                    <li class="menu-item"><a href="#">Vinbärsfux</a></li>
+                    <li class="menu-item"><a href="#">Vinkelbandat ordensfly</a></li>
+                    <li class="menu-item"><a href="#">Violett blåvinge</a></li>
+                    <li class="menu-item"><a href="#">Violett guldvinge</a></li>
+                    <li class="menu-item"><a href="#">Violettkantad guldvinge</a></li>
+                    <li class="menu-item"><a href="#">Vitfläckig guldvinge</a></li>
+                    <li class="menu-item"><a href="#">Vitgräsfjäril</a></li>
+                    <li class="menu-item"><a href="#">Väddnätfjäril</a></li>
+                    <li class="menu-item"><a href="#">Älggräspärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Ängsblåvinge</a></li>
+                    <li class="menu-item"><a href="#">Ängsmetallvinge</a></li>
+                    <li class="menu-item"><a href="#">Ängsnätfjäril</a></li>
+                    <li class="menu-item"><a href="#">Ängspärlemorfjäril</a></li>
+                    <li class="menu-item"><a href="#">Ängssmygare</a></li>
+                    <li class="menu-item"><a href="#">Åkervindesvärmare</a></li>
+                  </div>
                 </ul>
               </li>
               <li class="menu-item"><a href="#">Trollsländor</a></li>
@@ -413,6 +583,7 @@
       const isTouchPrimary = () => lastPointerType === 'touch' || mqCoarse.matches || mqNoHover.matches;
 
       // Build toggles and ARIA
+      let hoverTimeout;
       menu.querySelectorAll('.menu-item.has-submenu').forEach((li, i) => {
         const link = li.querySelector(':scope > a');
         const sub = li.querySelector(':scope > .submenu');
@@ -420,6 +591,25 @@
         if (!sub.id) sub.id = `submenu-${i+1}`;
         link.setAttribute('aria-haspopup', 'true');
         link.setAttribute('aria-expanded', 'false');
+
+        // Add hover delay to prevent immediate closing
+        li.addEventListener('mouseleave', () => {
+          if (isDesktopLayout()) {
+            hoverTimeout = setTimeout(() => {
+              // Only close if not hovering over any submenu
+              if (!li.matches(':hover')) {
+                closeTap(li);
+              }
+            }, 150); // Small delay
+          }
+        });
+        
+        li.addEventListener('mouseenter', () => {
+          if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = null;
+          }
+        });
 
         // Mobile-only toggle (+) — in DOM, hidden on desktop via CSS
         const btn = document.createElement('button');
@@ -472,8 +662,18 @@
         });
 
         // Desktop hover/focus: whenever submenu is about to show, evaluate flip
-        li.addEventListener('pointerenter', () => { if (isDesktopLayout()) ensureFlipToFit(li); });
-        li.addEventListener('focusin', () => { if (isDesktopLayout()) ensureFlipToFit(li); });
+        li.addEventListener('pointerenter', () => { 
+          if (isDesktopLayout()) {
+            ensureFlipToFit(li);
+            setupScrollArrows(li);
+          }
+        });
+        li.addEventListener('focusin', () => { 
+          if (isDesktopLayout()) {
+            ensureFlipToFit(li);
+            setupScrollArrows(li);
+          }
+        });
       });
 
       // Hamburger open/close (mobile panel)
@@ -568,6 +768,8 @@
           closeSiblingsTap(li);
           li.classList.add('open');
           link?.setAttribute('aria-expanded', 'true');
+          // Setup scroll arrows for large menus when opened
+          setupScrollArrows(li);
         }
       }
       function closeTap(li) {
@@ -615,6 +817,63 @@
             }
           });
         });
+      }
+
+      // Setup scroll arrows for large menus
+      function setupScrollArrows(li) {
+        const sub = li.querySelector(':scope > .submenu.large-menu');
+        const scrollContainer = li.querySelector(':scope > .submenu.large-menu .menu-items-container');
+        if (!sub || !scrollContainer) return;
+
+        let scrollArrowsSetup = false;
+
+        const setupArrowHandlers = () => {
+          if (scrollArrowsSetup) return;
+          scrollArrowsSetup = true;
+
+          // Handle scroll arrow clicks - click on arrows in the submenu container
+          const handleArrowClick = (e) => {
+            const rect = sub.getBoundingClientRect();
+            const clickY = e.clientY - rect.top;
+            
+            if (clickY <= 20) {
+              // Up arrow clicked
+              scrollContainer.scrollBy({ top: -100, behavior: 'smooth' });
+            } else if (clickY >= rect.height - 20) {
+              // Down arrow clicked  
+              scrollContainer.scrollBy({ top: 100, behavior: 'smooth' });
+            }
+          };
+
+          // Update arrow visibility based on scroll position of inner container
+          const updateArrowVisibility = () => {
+            const atTop = scrollContainer.scrollTop <= 5;
+            const atBottom = scrollContainer.scrollTop >= scrollContainer.scrollHeight - scrollContainer.clientHeight - 5;
+            
+            sub.classList.toggle('at-top', atTop);
+            sub.classList.toggle('at-bottom', atBottom);
+          };
+
+          sub.addEventListener('click', handleArrowClick);
+          scrollContainer.addEventListener('scroll', updateArrowVisibility);
+          
+          // Initial arrow state
+          updateArrowVisibility();
+        };
+
+        // Setup arrows when menu becomes visible
+        if (getComputedStyle(sub).display !== 'none') {
+          setupArrowHandlers();
+        } else {
+          // Wait for menu to become visible
+          const observer = new MutationObserver(() => {
+            if (getComputedStyle(sub).display !== 'none') {
+              setupArrowHandlers();
+              observer.disconnect();
+            }
+          });
+          observer.observe(sub, { attributes: true, attributeFilter: ['style'] });
+        }
       }
     })();
   </script>
