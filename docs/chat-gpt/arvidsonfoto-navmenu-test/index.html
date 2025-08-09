@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ArvidsonFoto.se – Navmeny Preview (mobile toggle + desktop click lock)</title>
+  <title>ArvidsonFoto.se – Navmeny (mobile toggle fix + desktop flip specificity)</title>
   <style>
     :root{
       --bar-h: 54px;
@@ -20,9 +20,9 @@
       --z-header: 1000;
       --z-backdrop: 900;
 
-      /* Mobile toggle hit area (overlay width/height) */
+      /* Mobile toggle overlay size */
       --toggle-touch: 72px;   /* width of the right-side overlay */
-      --toggle-minh: 46px;    /* minimum height of the overlay */
+      --toggle-minh: 46px;    /* height of the button */
       --submenu-gap: 8px;     /* gap between desktop flyouts */
     }
 
@@ -86,7 +86,7 @@
       .submenu .menu-item.has-submenu:focus-within > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
     }
 
-    /* Desktop tap-open + flip */
+    /* Desktop tap-open + flip and stronger override for flip while hovered */
     @media (min-width: 961px) {
       .menu-item.open > .submenu { display: block; }
       .submenu .menu-item.open > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
@@ -94,6 +94,12 @@
       .menu-item.open-left > .submenu { left: auto; right: 0; }
       .submenu .menu-item.open-left > .submenu { left: auto; right: calc(100% + var(--submenu-gap)); }
       .submenu .menu-item.open-left > a::after { content: "◂"; }
+
+      /* Increase specificity so hover never overrides a flip-left decision */
+      .submenu .menu-item.has-submenu.open-left:hover > .submenu,
+      .submenu .menu-item.has-submenu.open-left:focus-within > .submenu {
+        left: auto !important; right: calc(100% + var(--submenu-gap)) !important;
+      }
     }
 
     /* Search */
@@ -122,8 +128,7 @@
 
       .menu { display: block; padding: 8px 10px 32px; }
       .menu > .menu-item > a {
-        height: auto; padding: 12px 12px;
-        border-radius: 8px;
+        height: auto; padding: 12px 12px; border-radius: 8px;
         /* Reserve right side for the overlay toggle so taps there never hit the link */
         padding-right: calc(var(--toggle-touch) + 24px);
       }
@@ -133,11 +138,12 @@
       .menu > .menu-item.has-submenu > a::after,
       .submenu .menu-item.has-submenu > a::after { display: none !important; content: none !important; }
 
-      /* Full-height right-side toggle overlay (prevents misclick on the link) */
+      /* Full-height-on-row (fixed-height) toggle overlay – centered on the row, not the whole li */
       .submenu-toggle {
-        position: absolute; right: 6px; top: 0; bottom: 0; z-index: 2;
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        z-index: 2;
         width: var(--toggle-touch);
-        min-height: var(--toggle-minh);
+        height: var(--toggle-minh);
         display: flex !important; align-items: center; justify-content: center;
         background: #262a2f; color: var(--bar-fg);
         border: 1px solid #343a40; border-radius: 12px;
@@ -148,13 +154,13 @@
 
       .menu-item.has-submenu { position: relative; }
       .menu-item .submenu {
-        position: static; display: block; background: #111418; color: var(--bar-fg);
+        position: static; display: block; color: var(--bar-fg);
         height: 0; overflow: hidden; transition: height 220ms ease; will-change: height;
 
         /* Collapsed: completely hidden (no lines/leaks) */
         padding: 0; margin: 0; border: 0;
-        visibility: hidden; pointer-events: none;
-        contain: layout paint; background: transparent;
+        visibility: hidden; pointer-events: none; contain: layout paint;
+        background: transparent;
       }
       /* Expanded: restore spacing and left guide */
       .menu-item.expanded > .submenu {
@@ -162,7 +168,7 @@
         visibility: visible; pointer-events: auto; background: #111418;
       }
 
-      /* Allow wrapping in mobile so tall items keep the overlay full-height */
+      /* Allow wrapping in mobile */
       .submenu .menu-item > a { color: #d9dde2; padding: 10px 10px; border-radius: 6px; white-space: normal; }
     }
 
@@ -259,7 +265,7 @@
 
   <main class="content">
     <div class="card">
-      Förbättringar: (1) Mobil: större fullhöjds‑toggle på höger sida så det inte går att missa (+/×). (2) Desktop: inga flip‑hopp vid klick på vänsteröppnade nivåer; navigation sätter ?cat=slug i URL. (3) Mobil: inga linjer när nivåer är stängda.
+      Mobil: Toggleknappen ligger nu på radens höjd, täcker inte andra knappar och är lätt att träffa. Desktop: vänster‑flip har högre specificitet (ingen “studs” till höger).
     </div>
     <div style="height:900px"></div>
   </main>
@@ -293,7 +299,7 @@
         link.setAttribute('aria-haspopup', 'true');
         link.setAttribute('aria-expanded', 'false');
 
-        // Mobile-only toggle (+) — hidden on desktop via CSS, but always on top of the link
+        // Mobile-only toggle (+) — hidden on desktop via CSS
         const btn = document.createElement('button');
         btn.className = 'submenu-toggle';
         btn.type = 'button';
@@ -303,7 +309,7 @@
         btn.innerHTML = '<span class="icon" aria-hidden="true">+</span>';
         li.insertBefore(btn, sub);
 
-        // Ensure the overlay captures taps first (prevents misclick on the link beneath)
+        // Prevent mis-taps: the overlay captures pointer before link
         btn.addEventListener('pointerdown', (e) => { e.stopPropagation(); }, { passive: true });
         btn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -374,7 +380,7 @@
         if (header.classList.contains('nav-open') && e.target.closest('.main-nav a')) setOpen(false);
       });
 
-      // Navigation: replace default link navigation with query string update so you can verify target without leaving the page
+      // Navigation: push ?cat=slug so you can verify destination without leaving page
       menu.querySelectorAll('a[role="menuitem"]').forEach((a) => {
         a.addEventListener('click', (ev) => {
           // If this click was used to open a submenu on touch-desktop, ignore
@@ -382,20 +388,18 @@
           const hasSub = parentLi?.classList.contains('has-submenu');
           const isTouchDesktopOpenAction = isDesktopLayout() && isTouchPrimary() && hasSub && !parentLi.classList.contains('open');
 
-          if (isTouchDesktopOpenAction) return; // handled earlier
+          if (isTouchDesktopOpenAction) return; // handled above
 
-          // Otherwise, simulate navigation by setting ?cat=slug
           ev.preventDefault();
           const label = (a.textContent || '').trim();
           const slug = slugify(label);
           const url = new URL(window.location.href);
           url.searchParams.set('cat', slug);
           history.pushState({ cat: slug }, '', url);
-          // Optional: visual cue (set aria-current)
+          // Optional: highlight current
           menu.querySelectorAll('a[aria-current="page"]').forEach(el => el.removeAttribute('aria-current'));
           a.setAttribute('aria-current', 'page');
 
-          // Close mobile panel after selection
           if (header.classList.contains('nav-open')) setOpen(false);
         });
       });
@@ -414,7 +418,6 @@
         link && link.setAttribute('aria-expanded', 'true');
         btn  && btn.setAttribute('aria-expanded', 'true');
 
-        // Animate to target, then set auto
         const start = sub.getBoundingClientRect().height;
         sub.style.height = start + 'px';
         requestAnimationFrame(() => {
@@ -427,7 +430,6 @@
         };
         sub.addEventListener('transitionend', onEnd, { once: true });
 
-        // Keep section in view
         setTimeout(() => sub.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
       }
 
@@ -437,7 +439,6 @@
         const sub  = li.querySelector(':scope > .submenu');
         if (!sub) return;
 
-        // Collapse descendants first
         li.querySelectorAll(':scope .expanded').forEach(child => {
           child.classList.remove('expanded');
           const cSub = child.querySelector(':scope > .submenu');
@@ -448,11 +449,9 @@
           if (cSub) { cSub.style.height = '0px'; }
         });
 
-        // Animate to 0
         const current = sub.scrollHeight;
         sub.style.height = current + 'px';
-        // force reflow
-        sub.offsetHeight;
+        sub.offsetHeight; // force reflow
         sub.style.height = '0px';
 
         li.classList.remove('expanded');
@@ -487,7 +486,7 @@
       let flipLockUntil = 0;
       document.addEventListener('pointerdown', (e) => {
         if (e.target instanceof Element && e.target.closest('.submenu a')) {
-          flipLockUntil = performance.now() + 600; // lock flips for 600ms around the click
+          flipLockUntil = performance.now() + 600;
         }
       }, { capture: true, passive: true });
 
