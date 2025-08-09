@@ -145,7 +145,12 @@
       .menu > .menu-item > a {
         height: auto; padding: 12px 12px; border-radius: 8px;
         /* Reserve right side for the overlay toggle so taps there never hit the link */
-        padding-right: calc(var(--toggle-touch) + 24px);
+        padding-right: calc(var(--toggle-touch) + 12px);
+        /* Ensure consistent height and positioning */
+        min-height: var(--toggle-minh);
+        display: flex; align-items: center;
+        position: relative; /* Create stacking context */
+        z-index: 1;
       }
       .menu > .menu-item + .menu-item { margin-top: 4px; }
 
@@ -155,19 +160,47 @@
 
       /* Full-height-on-row (fixed-height) toggle overlay – centered on the row, not the whole li */
       .submenu-toggle {
-        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-        z-index: 2;
+        position: absolute; 
+        right: 6px; 
+        top: 50%; 
+        transform: translateY(-50%);
+        z-index: 10;
         width: var(--toggle-touch);
         height: var(--toggle-minh);
-        display: flex !important; align-items: center; justify-content: center;
-        background: #262a2f; color: var(--bar-fg);
-        border: 1px solid #343a40; border-radius: 12px;
+        display: flex !important; 
+        align-items: center; 
+        justify-content: center;
+        background: #262a2f; 
+        color: var(--bar-fg);
+        border: 1px solid #343a40; 
+        border-radius: 12px;
         touch-action: manipulation;
+        pointer-events: auto;
       }
-      .submenu-toggle .icon { transition: transform var(--speed); font-size: 18px; }
-      .menu-item.expanded > .submenu-toggle .icon { transform: rotate(45deg); }
+      
+      /* All menu items with submenus need relative positioning */
+      .menu-item.has-submenu { 
+        position: relative; 
+      }
+      
+      /* Ensure toggle buttons are positioned relative to their immediate parent menu item */
+      .menu > .menu-item.has-submenu > .submenu-toggle,
+      .submenu .menu-item.has-submenu > .submenu-toggle {
+        position: absolute; 
+        right: 6px; 
+        top: 50%; 
+        transform: translateY(-50%);
+        z-index: 10;
+      }
+      
+      .submenu-toggle .icon { 
+        transition: transform var(--speed); 
+        font-size: 18px; 
+      }
+      .menu-item.expanded > .submenu-toggle .icon { 
+        transform: rotate(45deg); 
+      }
 
-      .menu-item.has-submenu { position: relative; }
       .menu-item .submenu {
         position: static; display: block; color: var(--bar-fg);
         height: 0; overflow: hidden; transition: height 220ms ease; will-change: height;
@@ -176,6 +209,8 @@
         padding: 0; margin: 0; border: 0;
         visibility: hidden; pointer-events: none; contain: layout paint;
         background: transparent;
+        /* Ensure submenu doesn't affect parent positioning */
+        z-index: 1;
       }
       /* Expanded: restore spacing and left guide */
       .menu-item.expanded > .submenu {
@@ -184,7 +219,19 @@
       }
 
       /* Allow wrapping in mobile */
-      .submenu .menu-item > a { color: #d9dde2; padding: 10px 10px; border-radius: 6px; white-space: normal; }
+      .submenu .menu-item > a { 
+        color: #d9dde2; 
+        padding: 10px 10px; 
+        border-radius: 6px; 
+        white-space: normal; 
+        position: relative; 
+        z-index: 1;
+      }
+      
+      /* Ensure submenu items with toggles have proper padding */
+      .submenu .menu-item.has-submenu > a {
+        padding-right: calc(var(--toggle-touch) + 12px);
+      }
     }
 
     /* Active state hint */
@@ -254,7 +301,130 @@
           <li class="menu-item has-submenu">
             <a aria-haspopup="true" aria-expanded="false" href="#">Insekter</a>
             <ul class="submenu" aria-label="Insekter">
-              <li class="menu-item"><a href="#">Fjärilar</a></li>
+              <li class="menu-item has-submenu">
+                <a aria-haspopup="true" aria-expanded="false" href="#">Fjärilar</a>
+                <ul class="submenu" aria-label="Fjärilar">
+                  <li class="menu-item"><a href="#">Alkonblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Allmän poppelglasvinge</a></li>
+                  <li class="menu-item"><a href="#">Almsnabbvinge</a></li>
+                  <li class="menu-item"><a href="#">Amiral</a></li>
+                  <li class="menu-item"><a href="#">Apollofjäril</a></li>
+                  <li class="menu-item"><a href="#">Asknätfjäril</a></li>
+                  <li class="menu-item"><a href="#">Aspfjäril</a></li>
+                  <li class="menu-item"><a href="#">Aspskimmerfjäril</a></li>
+                  <li class="menu-item"><a href="#">Aurorafjäril</a></li>
+                  <li class="menu-item"><a href="#">Berggräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Blåfläckig träfjäril</a></li>
+                  <li class="menu-item"><a href="#">Bredbrämad bastardsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Brun björnspinnare</a></li>
+                  <li class="menu-item"><a href="#">Brun blåvinge</a></li>
+                  <li class="menu-item"><a href="#">Brun gräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Brunfläckig pärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Brunsprötad skymningssvärmare</a></li>
+                  <li class="menu-item"><a href="#">Busksnabbvinge</a></li>
+                  <li class="menu-item"><a href="#">Citronfjäril</a></li>
+                  <li class="menu-item"><a href="#">Dårgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Eksnabbvinge</a></li>
+                  <li class="menu-item"><a href="#">Ekspinnare</a></li>
+                  <li class="menu-item"><a href="#">Eldsnabbvinge</a></li>
+                  <li class="menu-item"><a href="#">Fetörtsblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Fjällbastardsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Fjällgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Fjällhöfjäril</a></li>
+                  <li class="menu-item"><a href="#">Fjällpärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Fjällvickerblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Gräsulv</a></li>
+                  <li class="menu-item"><a href="#">Grönfläckig vitfjäril</a></li>
+                  <li class="menu-item"><a href="#">Grönsnabbvinge</a></li>
+                  <li class="menu-item"><a href="#">Gullvivefjäril</a></li>
+                  <li class="menu-item"><a href="#">Hagtornsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Hedpärlemofjäril</a></li>
+                  <li class="menu-item"><a href="#">Humlelik dagsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Kamgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Karminspinnare</a></li>
+                  <li class="menu-item"><a href="#">Kartfjäril</a></li>
+                  <li class="menu-item"><a href="#">Kattunvisslare</a></li>
+                  <li class="menu-item"><a href="#">Klubbsprötad bastardsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Klöverblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Krattsnabbvinge</a></li>
+                  <li class="menu-item"><a href="#">Kvickgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Körsbärsfux</a></li>
+                  <li class="menu-item"><a href="#">Kålfjäril</a></li>
+                  <li class="menu-item"><a href="#">Ligustersvärmare</a></li>
+                  <li class="menu-item"><a href="#">Ljungblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Ljusgul höfjäril</a></li>
+                  <li class="menu-item"><a href="#">Luktgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Makaonfjäril</a></li>
+                  <li class="menu-item"><a href="#">Mindre bastardsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Mindre blåvinge</a></li>
+                  <li class="menu-item"><a href="#">Mindre guldvinge</a></li>
+                  <li class="menu-item"><a href="#">Mindre påfågelspinnare</a></li>
+                  <li class="menu-item"><a href="#">Mindre snabelsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Mindre tåtelsmygare</a></li>
+                  <li class="menu-item"><a href="#">Mnemosynefjäril</a></li>
+                  <li class="menu-item"><a href="#">Myrpärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Nässelfjäril</a></li>
+                  <li class="menu-item"><a href="#">Oxhuvudspinnare</a></li>
+                  <li class="menu-item"><a href="#">Poppelsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Prydlig pärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Puktörneblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Pärlgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Påfågelöga</a></li>
+                  <li class="menu-item"><a href="#">Rapsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Rovfjäril</a></li>
+                  <li class="menu-item"><a href="#">Rödfläckig blåvinge</a></li>
+                  <li class="menu-item"><a href="#">Sandgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Sexfläckig bastardsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Silverblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Silversmygare</a></li>
+                  <li class="menu-item"><a href="#">Silverstreckad pärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Skogsgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Skogsnätfjäril</a></li>
+                  <li class="menu-item"><a href="#">Skogspärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Skogsvisslare</a></li>
+                  <li class="menu-item"><a href="#">Skogsvitvinge</a></li>
+                  <li class="menu-item"><a href="#">Slåttergräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Smultronvisslare</a></li>
+                  <li class="menu-item"><a href="#">Sorgmantel</a></li>
+                  <li class="menu-item"><a href="#">Sotnätfjäril</a></li>
+                  <li class="menu-item"><a href="#">Starrgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Stor dagsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Storfläckig pärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Större snabelsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Större träfjäril</a></li>
+                  <li class="menu-item"><a href="#">Svartfläckig blåvinge</a></li>
+                  <li class="menu-item"><a href="#">Svartfläckig glanssmygare</a></li>
+                  <li class="menu-item"><a href="#">Svavelgul höfjäril</a></li>
+                  <li class="menu-item"><a href="#">Svingelgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Svävfluglik dagsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Sälgskimmerfjäril</a></li>
+                  <li class="menu-item"><a href="#">Tallgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Tallprocessionsspinnare</a></li>
+                  <li class="menu-item"><a href="#">Tallsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Tistelfjäril</a></li>
+                  <li class="menu-item"><a href="#">Tosteblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Tryfjäril</a></li>
+                  <li class="menu-item"><a href="#">Turkos blåvinge</a></li>
+                  <li class="menu-item"><a href="#">Tåtelsmygare</a></li>
+                  <li class="menu-item"><a href="#">Videfux</a></li>
+                  <li class="menu-item"><a href="#">Videsvärmare</a></li>
+                  <li class="menu-item"><a href="#">Vinbärsfux</a></li>
+                  <li class="menu-item"><a href="#">Vinkelbandat ordensfly</a></li>
+                  <li class="menu-item"><a href="#">Violett blåvinge</a></li>
+                  <li class="menu-item"><a href="#">Violett guldvinge</a></li>
+                  <li class="menu-item"><a href="#">Violettkantad guldvinge</a></li>
+                  <li class="menu-item"><a href="#">Vitfläckig guldvinge</a></li>
+                  <li class="menu-item"><a href="#">Vitgräsfjäril</a></li>
+                  <li class="menu-item"><a href="#">Väddnätfjäril</a></li>
+                  <li class="menu-item"><a href="#">Älggräspärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Ängsblåvinge</a></li>
+                  <li class="menu-item"><a href="#">Ängsmetallvinge</a></li>
+                  <li class="menu-item"><a href="#">Ängsnätfjäril</a></li>
+                  <li class="menu-item"><a href="#">Ängspärlemorfjäril</a></li>
+                  <li class="menu-item"><a href="#">Ängssmygare</a></li>
+                  <li class="menu-item"><a href="#">Åkervindesvärmare</a></li>
+                </ul>
+              </li>
               <li class="menu-item"><a href="#">Trollsländor</a></li>
             </ul>
           </li>
