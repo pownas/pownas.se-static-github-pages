@@ -280,21 +280,45 @@
       .menu > .menu-item.has-submenu > a,
       .submenu .menu-item.has-submenu > a {
         padding-right: calc(var(--toggle-touch) + 20px);
+        position: relative; /* Ensure proper stacking context for button positioning */
       }
 
       /* Accordion behavior: height animation; collapsed state completely hidden (no leak) */
       .submenu-toggle {
-        position: absolute; right: 6px; top: 3px; z-index: 2;
+        position: absolute; right: 10px; top: 6px; z-index: 15;
         background: #262a2f; color: var(--bar-fg);
         border: 1px solid #343a40; border-radius: 12px;
         width: calc(var(--toggle-touch) + 10px); height: var(--toggle-height);
         display: grid !important; place-items: center;
         touch-action: manipulation;
+        pointer-events: auto; /* Ensure button is clickable */
+      }
+      
+      /* Ensure parent menu items maintain positioning context for buttons */
+      .menu-item.has-submenu {
+        position: relative;
+      }
+      
+      /* Prevent parent link from being clickable in the button area */
+      .menu-item.has-submenu > a {
+        pointer-events: auto; /* Parent link clickable */
+        position: relative;
+        z-index: 2; /* Below button but above submenu */
+      }
+      
+      .menu-item.has-submenu > a::before {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: calc(var(--toggle-touch) + 20px);
+        pointer-events: none; /* Block parent clicks in button area */
+        z-index: -1;
       }
       .submenu-toggle .icon { transition: transform var(--speed); font-size: 18px; }
       .menu-item.expanded > .submenu-toggle .icon { transform: rotate(45deg); }
 
-      .menu-item.has-submenu { position: relative; }
       .menu-item .submenu {
         position: static; display: block; background: #111418; color: var(--bar-fg);
         height: 0; overflow: hidden; transition: height 220ms ease; will-change: height;
@@ -344,6 +368,13 @@
       }
 
       .submenu .menu-item > a { color: #d9dde2; padding: 10px 10px; border-radius: 6px; }
+    }
+
+    /* Desktop: reset submenu colors back to proper light background scheme */
+    @media (min-width: 961px) {
+      .submenu .menu-item > a { 
+        color: var(--submenu-fg) !important; /* Reset to dark text for light backgrounds */
+      }
     }
 
     /* Active state hint */
