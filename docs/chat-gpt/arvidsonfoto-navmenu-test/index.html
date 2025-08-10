@@ -237,7 +237,7 @@
     }
 
     /* Desktop explicit tap-open and flipping logic */
-    @media (min-width: 961px) {
+    @media (min-width: 961px) and (hover: hover) and (pointer: fine) {
       .menu-item.open > .submenu { display: block; }
       .menu-item.open > .submenu.large-menu { display: flex; }
       .submenu .menu-item.open > .submenu { display: block; left: calc(100% + var(--submenu-gap)); top: -8px; }
