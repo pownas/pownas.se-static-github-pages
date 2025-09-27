@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rik Textredigerare</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f4f4f9;
+        }
+        .editor-container {
+            width: 80%;
+            max-width: 800px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .editor-toolbar {
+            background: #0078d4;
+            color: white;
+            display: flex;
+            padding: 8px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .editor-toolbar button {
+            background: white;
+            color: #0078d4;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s, color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .editor-toolbar button:hover {
+            background: #005ea6;
+            color: white;
+        }
+        .editor-toolbar button svg {
+            width: 16px;
+            height: 16px;
+        }
+        .editor-content {
+            padding: 16px;
+            min-height: 300px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .editor-content:focus {
+            outline: 2px solid #0078d4;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-toolbar" role="toolbar" aria-label="Textredigerarverktyg">
+            <button onclick="execCmd('bold')" aria-label="Fetstil">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h7a4 4 0 0 1 0 8H6z"></path><path d="M6 12h8a4 4 0 1 1 0 8H6z"></path></svg>
+                Fet
+            </button>
+            <button onclick="execCmd('italic')" aria-label="Kursiv">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>
+                Kursiv
+            </button>
+            <button onclick="execCmd('underline')" aria-label="Understrykning">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"></path><line x1="4" y1="21" x2="20" y2="21"></line></svg>
+                Understryk
+            </button>
+            <button onclick="execCmd('justifyLeft')" aria-label="Vänsterjustera">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="17" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                Vänster
+            </button>
+            <button onclick="execCmd('justifyCenter')" aria-label="Centrera">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="6" y1="18" x2="18" y2="18"></line></svg>
+                Centrera
+            </button>
+            <button onclick="execCmd('justifyRight')" aria-label="Högerjustera">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="7" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                Höger
+            </button>
+            <button onclick="execCmd('insertUnorderedList')" aria-label="Punktlista">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="4" cy="6" r="1"></circle><circle cx="4" cy="12" r="1"></circle><circle cx="4" cy="18" r="1"></circle></svg>
+                Punktlista
+            </button>
+            <button onclick="execCmd('insertOrderedList')" aria-label="Numrerad lista">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h5"></path><path d="M4 12h5"></path><path d="M4 18h5"></path><path d="M2 6l1 1l1-1"></path><path d="M2 12h2"></path><path d="M2 18h2"></path></svg>
+                Numr. lista
+            </button>
+            <button onclick="execCmd('createLink')" aria-label="Infoga länk">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 1 7 7l-4 4a5 5 0 0 1-7-7l4-4a5 5 0 0 1 7 7"></path><path d="M14 10a5 5 0 0 0-7-7l-4 4a5 5 0 0 0 7 7"></path></svg>
+                Länk
+            </button>
+        </div>
+        <div id="editor" class="editor-content" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Huvudsaklig textredigerare">
+            Börja skriva här...
+        </div>
+    </div>
+
+    <script>
+        // Kör kommandon i redigeraren
+        function execCmd(command) {
+            if (command === 'createLink') {
+                const url = prompt('Ange URL:', 'http://');
+                document.execCommand(command, false, url);
+            } else {
+                document.execCommand(command, false, null);
+            }
+            saveContent();
+        }
+
+        // Spara innehåll till Local Storage
+        function saveContent() {
+            const content = document.getElementById('editor').innerHTML;
+            localStorage.setItem('editorContent', content);
+        }
+
+        // Ladda innehåll från Local Storage
+        function loadContent() {
+            const savedContent = localStorage.getItem('editorContent');
+            if (savedContent) {
+                document.getElementById('editor').innerHTML = savedContent;
+            }
+        }
+
+        // Ladda innehållet vid sidans start
+        window.onload = loadContent;
+
+        // Spara automatiskt vid tangenttryckningar
+        document.getElementById('editor').addEventListener('input', saveContent);
+    </script>
+</body>
+</html>
