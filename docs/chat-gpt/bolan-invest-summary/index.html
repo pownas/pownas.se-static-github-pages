@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Amortera eller Investera — Simulator (Lump‑amort + Automatiska investeringar)</title>
+<style>
+  :root{
+    --bg:#07101a;
+    --card:#0b1822;
+    --muted:#9aa7b2;
+    --accent:#4fd1c5;
+    --accent2:#60a5fa;
+    --danger:#ff6b6b;
+    --glass: rgba(255,255,255,0.02);
+    --glass-2: rgba(255,255,255,0.018);
+    --text:#e6eef3;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color-scheme: dark;
+  }
+  html,body{height:100%}
+  body{
+    margin:0;
+    background: linear-gradient(180deg,#04121a 0%, #071224 70%);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:18px;
+    box-sizing:border-box;
+  }
+  .app{
+    max-width:1200px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:18px;
+  }
+  header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  h1{font-size:1.05rem;margin:0}
+  p.lead{margin:6px 0 0;color:var(--muted);font-size:0.95rem}
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.008));
+    border:1px solid rgba(255,255,255,0.03);
+    padding:12px;
+    border-radius:10px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.55);
+  }
+  .controls{display:flex;flex-direction:column;gap:10px}
+  label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:6px}
+  input[type="number"], select, input[type="text"]{
+    width:100%;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:var(--glass);color:inherit;font-size:0.95rem;
+  }
+  .row{display:flex;gap:8px}
+  .row> *{flex:1}
+  .small{font-size:0.83rem;color:var(--muted)}
+  .btn{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#052025;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  .toggles{display:flex;gap:8px;flex-wrap:wrap}
+  .chart-wrap{display:grid;grid-template-columns:1fr 320px;gap:16px}
+  .chart-card{position:relative;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));}
+  canvas{display:block;border-radius:8px;width:100%;height:360px;background:transparent}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .legend-item{display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:8px;background:var(--glass-2);cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
+  .legend-swatch{width:12px;height:12px;border-radius:3px}
+  .results{display:flex;flex-direction:column;gap:8px}
+  .result-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:var(--glass-2);border:1px solid rgba(255,255,255,0.02)}
+  .muted{color:var(--muted)}
+  .export{display:flex;gap:8px}
+  .tooltip{
+    position:absolute;pointer-events:none;background:rgba(3,7,12,0.95);color:var(--text);border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,0.6);min-width:160px;z-index:40;
+  }
+  .lumps{display:flex;flex-direction:column;gap:8px}
+  .lump-row{display:flex;gap:8px;align-items:center}
+  .lump-row input{flex:1}
+  .remove-lump{background:#2b2b35;color:white;border-radius:6px;border:none;padding:6px 8px}
+  .add-lump{background:transparent;border:1px dashed rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  @media (max-width:980px){
+    .app{grid-template-columns:1fr;padding:12px}
+    .chart-wrap{grid-template-columns:1fr}
+    canvas{height:320px}
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Amortera eller Investera — Nu med klumpsummor</h1>
+        <p class="lead">Lägg till engångsamorteringar (per år) och välj att automatiskt omfördela frigjorda betalningar till investering när lånet är betalt.</p>
+      </div>
+      <div style="text-align:right">
+        <div class="small muted">UI: svenska · Single‑file</div>
+      </div>
+    </header>
+
+    <aside class="card">
+      <div class="controls">
+        <div>
+          <label>Valuta</label>
+          <select id="currency">
+            <option value="SEK" selected>SEK</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Lånebelopp</label>
+          <input type="number" id="loanAmount" value="3000000" />
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Årlig låneränta (%)</label>
+            <input type="number" id="loanRate" step="0.01" value="3.0" />
+          </div>
+          <div>
+            <label>Minsta amortering/år (%)</label>
+            <input type="number" id="minAmortYearPct" step="0.01" value="1.0" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Extra månadsamortering</label>
+            <input type="number" id="extraAmort" value="3000" />
+            <small class="help">Läggs ovanpå minsta amortering</small>
+          </div>
+          <div>
+            <label>Månatlig investeringsinsättning</label>
+            <input type="number" id="investMonthly" value="3000" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Förväntad årlig avkastning (%)</label>
+            <input type="number" id="expReturn" step="0.1" value="7.0" />
+          </div>
+          <div>
+            <label>Årlig volatilitet (%)</label>
+            <input type="number" id="volatility" step="0.1" value="15.0" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Tidsperiod (år)</label>
+            <input type="number" id="years" value="30" />
+          </div>
+          <div>
+            <label>Monte Carlo körningar</label>
+            <input type="number" id="mcRuns" value="500" />
+          </div>
+        </div>
+
+        <div>
+          <label>Ränteavdrag (%) — förenklad</label>
+          <input type="number" id="interestTaxReliefPct" step="0.1" value="30" />
+        </div>
+
+        <div>
+          <label>Skatt på avkastning (%)</label>
+          <input type="number" id="invTaxPct" step="0.1" value="30" />
+        </div>
+
+        <div>
+          <label>Amortering / Investering — dela (%)</label>
+          <input type="number" id="splitPercent" value="50" />
+          <small class="help">Procent som går till amortering; resten investeras (vid "Dela").</small>
+        </div>
+
+        <div>
+          <label>Strategi</label>
+          <select id="strategy">
+            <option value="amort">Amortera fullt</option>
+            <option value="invest">Investera fullt</option>
+            <option value="split" selected>Dela</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Klumpsummor — extra amorteringar (per år)</label>
+          <div class="lumps" id="lumpsContainer"></div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="add-lump" id="addLumpBtn">+ Lägg till klumpsumma</button>
+            <button class="btn secondary" id="clearLumpsBtn">Rensa</button>
+          </div>
+          <small class="help">Ange år (decimalt tillåtet, t.ex. 1.5) och belopp. Klumpsummorna används som extra amorteringar vid angivet år.</small>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="checkbox" id="autoRedirect" checked style="accent-color:#60a5fa" />
+          <label style="margin:0">Automatiskt omfördela frigjorda betalningar till investering när lån är betalt</label>
+        </div>
+
+        <div>
+          <label>Scenarier</label>
+          <div class="toggles">
+            <label style="display:flex;gap:8px;align-items:center">
+              <input type="checkbox" id="enableCrash" /> <span class="small">Engångskrasch</span>
+            </label>
+            <label style="display:flex;gap:8px;align-items:center">
+              <input type="checkbox" id="doMonteCarlo" checked /> <span class="small">Monte Carlo</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="crashControls" style="display:none">
+          <div class="row">
+            <div><label>Krasch - storlek (%)</label><input type="number" id="crashDepth" value="-40" /></div>
+            <div><label>År för krasch</label><input type="number" id="crashYear" value="2" /></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="runBtn">Kör simulering</button>
+          <button class="btn secondary" id="resetBtn">Återställ</button>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn secondary" id="saveSettings">Spara lokalt</button>
+          <button class="btn secondary" id="loadSettings">Läs lokalt</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="card">
+      <div class="chart-wrap">
+        <div class="chart-card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong>Skuld & Portfölj över tid</strong>
+              <div class="small muted">Peka / tryck för att se detaljer. Klicka i legend för att visa/dölja serier.</div>
+            </div>
+            <div style="text-align:right">
+              <div class="small muted">År: <span id="activeYear">0</span></div>
+              <div class="small muted">Valuta: <span id="displayCurrency">SEK</span></div>
+            </div>
+          </div>
+
+          <div style="position:relative;margin-top:10px">
+            <canvas id="mainChart" width="900" height="360"></canvas>
+            <div id="tooltip" class="tooltip" style="display:none"></div>
+          </div>
+
+          <div class="legend" id="legend"></div>
+          <div class="legend-bottom muted small" style="margin-top:8px">
+            Linjetyp: streckad = skuld, heldrag = portfölj. Marker visas vid vald år.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="results">
+            <div class="result-row"><div class="muted">Slutvärde — Amortera fullt</div><div id="finalAmort" style="font-weight:700">—</div></div>
+            <div class="result-row"><div class="muted">Slutvärde — Investera fullt</div><div id="finalInvest" style="font-weight:700">—</div></div>
+            <div class="result-row"><div class="muted">Slutvärde — Dela (median MC)</div><div id="finalSplit" style="font-weight:700">—</div></div>
+            <div class="result-row"><div class="muted">Monte Carlo — Median / 10% / 90%</div><div id="mcStats" style="font-weight:700">—</div></div>
+            <div class="result-row"><div class="muted">Total räntekostnad efter skattereduktion</div><div id="totalInterest" style="font-weight:700">—</div></div>
+
+            <div style="display:flex;gap:8px" class="export">
+              <button class="btn" id="exportCSV">Exportera CSV</button>
+              <button class="btn secondary" id="printBtn">Skriv ut</button>
+            </div>
+
+            <div class="hint">Tips: Lägg in klumpsummor och välj automatisk omdirigering så maxar simuleringen investeringarna efter bästa möjliga tidpunkt.</div>
+          </div>
+        </div>
+      </div>
+
+      <section style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:320px">
+          <h3 style="margin:0 0 6px 0">Vad jag lagt till</h3>
+          <div class="card" style="padding:12px">
+            - Dynamisk lista för klumpsummor (år + belopp) som tillämpas som extra amorteringar.<br>
+            - Om lån blir betalt tidigt omfördelas frigjorda betalningar automatiskt till investering (kan stängas av).<br>
+            - Simulering och Monte Carlo respekterar klumpsummor och omfördelning.<br>
+            - Tooltip/legend/CSV uppdaterade för att visa klumpsummor och MC‑statistik.
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:320px">
+          <h3 style="margin:0 0 6px 0">Antaganden</h3>
+          <div class="card" style="padding:12px">
+            - Klumpsummor används som amortering (inte investering) vid angivet år. Om klump överbetalar lånet, överskjutande del återförs till investering samma månad eller därefter.<br>
+            - Förenklad skatt och räntereduktion som tidigare.<br>
+            - Automatisk omfördelning baseras på strategi och tidigare betalningsmönster.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer style="grid-column:1/-1;margin-top:8px;color:var(--muted);font-size:0.9rem">
+      Vill du se en markör som visar exakt år när lånet blir helt betalt i grafen? Jag kan lägga till en vertikal annotering för payoff‑året också.
+    </footer>
+  </div>
+
+<script>
+/* Single-file simulator with lumps (klumpsummor) + automatic redirect of freed cash to investments.
+   Key behaviours:
+   - Klumpsummor applied as extra amortering at specified year (decimal allowed).
+   - If loan paid off, subsequent amort-budget is added to investments if autoRedirect is ON.
+*/
+
+const $ = id => document.getElementById(id);
+const fmt = (v,curr='SEK') => (Math.round(v*100)/100).toLocaleString('sv-SE') + ' ' + curr;
+
+function monthlyRate(annualPct){ return Math.pow(1+annualPct/100, 1/12) - 1; }
+
+/* UI: lumps list management */
+function createLumpRow(year=1, amount=10000){
+  const wrapper = document.createElement('div');
+  wrapper.className = 'lump-row card';
+  wrapper.style.padding = '8px';
+  wrapper.style.display = 'flex';
+  wrapper.style.gap = '8px';
+  wrapper.innerHTML = `
+    <input type="number" class="lump-year" step="0.01" value="${year}" title="År" />
+    <input type="number" class="lump-amount" value="${amount}" title="Belopp" />
+    <button class="remove-lump">Ta bort</button>
+  `;
+  wrapper.querySelector('.remove-lump').addEventListener('click', ()=>wrapper.remove());
+  return wrapper;
+}
+
+$('addLumpBtn').addEventListener('click', (e)=>{
+  e.preventDefault();
+  $('lumpsContainer').appendChild(createLumpRow(1,10000));
+});
+$('clearLumpsBtn').addEventListener('click', ()=>{ $('lumpsContainer').innerHTML=''; });
+
+/* Read lumps from DOM and return array of {year,amount} */
+function readLumpsFromDOM(){
+  const rows = Array.from(document.querySelectorAll('.lump-row'));
+  return rows.map(r=>{
+    const y = parseFloat(r.querySelector('.lump-year').value) || 0;
+    const a = parseFloat(r.querySelector('.lump-amount').value) || 0;
+    return {year: y, amount: a};
+  }).filter(x=>x.amount>0 && x.year>=0);
+}
+
+/* Simulation core (monthly steps).
+   lumps: array of {year,amount} in opts; we'll create a month->amount map.
+   autoRedirect: if true, after payoff freedPerMonth is added to investments.
+*/
+function simulateOnce(strategy, opts, rngSeries=null){
+  const months = Math.round(opts.years * 12);
+  // build lump map monthIndex -> amount
+  const lumpsMap = {};
+  if(opts.lumps && opts.lumps.length){
+    opts.lumps.forEach(l=>{
+      const monthIndex = Math.round(l.year * 12);
+      if(monthIndex >= 0 && monthIndex <= months){
+        lumpsMap[monthIndex] = (lumpsMap[monthIndex] || 0) + l.amount;
+      }
+    });
+  }
+
+  let loanBal = opts.loanAmount;
+  const monthlyLoanRate = opts.loanRate/100/12;
+  const minMonthlyAmort = (opts.loanAmount * (opts.minAmortYearPct/100)) / 12;
+  const monthlyInvestBase = opts.investMonthly;
+  const extraMonthlyAmort = opts.extraAmort;
+  const split = opts.splitPercent/100;
+  const interestTaxRelief = opts.interestTaxReliefPct/100;
+  const invTax = opts.invTaxPct/100;
+  const mu = opts.expReturn/100;
+  const sigma = opts.volatility/100;
+  const dt = 1/12;
+
+  // Precompute freedPerMonth (what becomes available after loan paid off)
+  // Freed includes minMonthlyAmort always. Additionally include amounts that were used for amort depending on strategy:
+  let freedPerMonth = minMonthlyAmort;
+  if(opts.autoRedirect){
+    if(strategy === 'amort'){
+      // when amort strategy, investMonthly had been redirected to amort; include it and extraAmort
+      freedPerMonth += extraMonthlyAmort + monthlyInvestBase;
+    } else if(strategy === 'split'){
+      // include portion of extraMonthlyAmort that went to amort via split
+      freedPerMonth += extraMonthlyAmort * split;
+    } else {
+      // invest strategy: extraMonthlyAmort typically redirected to invest, so only minMonthlyAmort is freed
+    }
+  } else {
+    freedPerMonth = 0; // if auto redirect disabled, freedPerMonth not automatically added
+  }
+
+  let portfolio = 0;
+  let totalInterestPaid = 0;
+  let loanPaidAtMonth = null;
+
+  const series = [];
+
+  for(let m=0;m<=months;m++){
+    series.push({month:m, loanBal:loanBal, portfolio:portfolio, interestPaidToDate: totalInterestPaid});
+    if(m===months) break;
+
+    // interest for month
+    const interest = loanBal * monthlyLoanRate;
+    totalInterestPaid += interest;
+
+    // default allocations
+    let investThisMonth = monthlyInvestBase;
+    let amortThisMonth = minMonthlyAmort;
+    // extra monthly amounts and strategy handling
+    if(strategy === 'amort'){
+      amortThisMonth += extraMonthlyAmort + monthlyInvestBase; // investMonthly redirected
+      investThisMonth = 0;
+    } else if(strategy === 'invest'){
+      investThisMonth += extraMonthlyAmort;
+      // amortThisMonth stays as minMonthlyAmort
+    } else if(strategy === 'split'){
+      const extraPool = extraMonthlyAmort + monthlyInvestBase;
+      amortThisMonth += extraPool * split;
+      investThisMonth = extraPool * (1 - split);
+    }
+
+    // if loan already paid earlier, reallocate freedPerMonth to investments and zero amort
+    if(loanBal <= 1e-9){
+      if(freedPerMonth > 0){
+        investThisMonth += freedPerMonth;
+      }
+      amortThisMonth = 0;
+    }
+
+    // apply lump if present at this month (lumps always go to amort)
+    const lumpThisMonth = lumpsMap[m] || 0;
+    if(lumpThisMonth > 0){
+      // clamped later by availableToPayLoan logic
+      amortThisMonth += lumpThisMonth;
+    }
+
+    // ensure we don't amort more than loan+interest; redirect excess to invest
+    const availableToPayLoan = loanBal + interest;
+    if(amortThisMonth > availableToPayLoan){
+      const excess = amortThisMonth - availableToPayLoan;
+      amortThisMonth = Math.max(0, availableToPayLoan);
+      investThisMonth += excess; // move overpayment to investment
+    }
+
+    // update loan balance
+    loanBal = loanBal + interest - amortThisMonth;
+    if(loanBal <= 1e-8){
+      // mark payoff month if first time
+      if(loanPaidAtMonth === null) loanPaidAtMonth = m;
+      loanBal = 0;
+    }
+
+    // portfolio growth: decide monthly return (stochastic if rngSeries provided)
+    let monthlyReturn;
+    if(rngSeries){
+      monthlyReturn = rngSeries.shift();
+    } else {
+      monthlyReturn = Math.pow(1+mu, dt) - 1;
+    }
+    // apply returns to existing portfolio then add contribution
+    portfolio = portfolio * (1 + monthlyReturn) + investThisMonth;
+  }
+
+  // interest rebate (simplified)
+  const interestRefund = totalInterestPaid * interestTaxRelief;
+  const netInterestCost = totalInterestPaid - interestRefund;
+
+  // invested principal calculation (deterministic)
+  let investedPrincipal = 0;
+  {
+    let loanBal2 = opts.loanAmount;
+    for(let m=0;m<Math.round(opts.years*12);m++){
+      const interest2 = loanBal2 * monthlyLoanRate;
+      let amortThisMonth = minMonthlyAmort;
+      let investThisMonth = monthlyInvestBase;
+      if(strategy === 'amort'){
+        amortThisMonth += extraMonthlyAmort + monthlyInvestBase;
+        investThisMonth = 0;
+      } else if(strategy === 'invest'){
+        investThisMonth += extraMonthlyAmort;
+      } else if(strategy === 'split'){
+        const extraPool = extraMonthlyAmort + monthlyInvestBase;
+        amortThisMonth += extraPool * split;
+        investThisMonth = extraPool * (1 - split);
+      }
+      // apply lump if exists
+      const lumpAmt = (opts.lumps || []).reduce((sum,l)=> sum + ((Math.round(l.year*12)===m)? l.amount : 0), 0);
+      amortThisMonth += lumpAmt;
+      // cap amort to remaining
+      const available = loanBal2 + interest2;
+      if(amortThisMonth > available){
+        const excess = amortThisMonth - available;
+        amortThisMonth = available;
+        investThisMonth += excess;
+      }
+      loanBal2 = loanBal2 + interest2 - amortThisMonth;
+      if(loanBal2<0) loanBal2 = 0;
+      investedPrincipal += investThisMonth;
+    }
+  }
+
+  const gains = Math.max(0, portfolio - investedPrincipal);
+  const taxOnGains = gains * invTax;
+  const portfolioAfterTax = portfolio - taxOnGains;
+
+  return {
+    series,
+    portfolioBeforeTax: portfolio,
+    portfolioAfterTax,
+    investedPrincipal,
+    totalInterestPaid,
+    interestRefund,
+    netInterestCost,
+    loanPaidAtMonth
+  };
+}
+
+/* Monte Carlo monthly returns (GBM) */
+function gbmMonthlySeries(mu, sigma, months){
+  const dt = 1/12;
+  const series = new Array(months);
+  for(let i=0;i<months;i++){
+    const z = randn();
+    const m = Math.exp((mu - 0.5 * sigma*sigma) * dt + sigma * Math.sqrt(dt) * z) - 1;
+    series[i] = m;
+  }
+  return series;
+}
+function randn(){
+  let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
+  return Math.sqrt(-2.0*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+/* Simple canvas chart similar to previous iteration (interactive tooltip & legend) */
+const chart = { canvas: $('mainChart'), ctx: null, datasets: [], labels: [], padding:{l:60,r:18,t:18,b:40}, deviceRatio: window.devicePixelRatio || 1, hoverIndex: -1 };
+
+function setupCanvas(){
+  const c = chart.canvas;
+  const dpr = chart.deviceRatio;
+  const rect = c.getBoundingClientRect();
+  c.width = Math.floor(rect.width * dpr);
+  c.height = Math.floor(rect.height * dpr);
+  c.style.width = rect.width + 'px';
+  c.style.height = rect.height + 'px';
+  chart.ctx = c.getContext('2d');
+  chart.ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function drawChart(){
+  const ctx = chart.ctx;
+  const {l,r,t,b} = chart.padding;
+  const w = chart.canvas.clientWidth;
+  const h = chart.canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+
+  let min = Infinity, max = -Infinity;
+  chart.datasets.forEach(ds=>{ if(!ds.visible) return; ds.data.forEach(v=>{ if(v<min) min=v; if(v>max) max=v; }); });
+  if(!isFinite(min) || !isFinite(max)){ min=0; max=1; }
+  const padVal = (max-min)*0.08;
+  min -= padVal; max += padVal;
+  const plotW = w - l - r, plotH = h - t - b, points = chart.labels.length;
+
+  // grid & y labels
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth=1; ctx.beginPath();
+  const gridCount = 5; ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.font='12px Inter, Arial'; ctx.textBaseline='middle'; ctx.textAlign='right';
+  for(let i=0;i<=gridCount;i++){
+    const y = t + (plotH/gridCount)*i;
+    ctx.moveTo(l,y); ctx.lineTo(l+plotW,y);
+    const val = max + (min-max)*(i/gridCount);
+    ctx.fillText(Math.round(val).toLocaleString('sv-SE'), l-8, y);
+  }
+  ctx.stroke();
+
+  // x labels (years)
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const step = Math.max(1, Math.floor(points/8));
+  for(let i=0;i<points;i+=step){
+    const x = l + (i/(points-1))*plotW;
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.fillText(chart.labels[i], x, t + plotH + 8);
+  }
+
+  // datasets
+  chart.datasets.forEach(ds=>{
+    if(!ds.visible) return;
+    ctx.beginPath();
+    ctx.lineWidth = ds.lineWidth || 2;
+    ctx.strokeStyle = ds.color;
+    ctx.setLineDash(ds.style==='dashed' ? [8,6] : []);
+    for(let i=0;i<points;i++){
+      const val = ds.data[i] || 0;
+      const x = l + (i/(points-1))*plotW;
+      const y = t + (1 - (val - min)/(max-min)) * plotH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    if(ds.fill){
+      ctx.lineTo(l+plotW, t+plotH);
+      ctx.lineTo(l, t+plotH);
+      ctx.closePath();
+      ctx.globalAlpha = 0.06; ctx.fillStyle = ds.color; ctx.fill(); ctx.globalAlpha = 1;
+    }
+  });
+
+  // hover marker
+  const hi = chart.hoverIndex;
+  if(hi >= 0 && hi < points){
+    const x = l + (hi/(points-1))*plotW;
+    ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.moveTo(x,t); ctx.lineTo(x,t+plotH); ctx.stroke();
+    chart.datasets.forEach(ds=>{
+      if(!ds.visible) return;
+      const val = ds.data[hi] || 0;
+      const y = t + (1 - (val - min)/(max-min)) * plotH;
+      ctx.beginPath(); ctx.fillStyle = ds.color; ctx.strokeStyle='#0b1216'; ctx.lineWidth=2; ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+  }
+}
+
+/* Legend build */
+function buildLegend(container){
+  container.innerHTML = '';
+  chart.datasets.forEach(ds=>{
+    const item = document.createElement('div'); item.className='legend-item'; item.dataset.key = ds.key;
+    const sw = document.createElement('div'); sw.className='legend-swatch'; sw.style.background = ds.color; sw.style.opacity = ds.visible ? '1' : '0.35';
+    const label = document.createElement('div'); label.innerHTML = `<div style="font-weight:600">${ds.label}</div><div class="small muted">${ds.hint||''}</div>`;
+    item.appendChild(sw); item.appendChild(label);
+    item.addEventListener('click', ()=>{ ds.visible = !ds.visible; sw.style.opacity = ds.visible ? '1' : '0.35'; drawChart(); });
+    container.appendChild(item);
+  });
+}
+
+/* Tooltip DOM */
+const tooltipEl = $('tooltip');
+function showTooltip(x,y,items,year){
+  tooltipEl.style.display = 'block';
+  tooltipEl.style.left = (x + 12) + 'px';
+  tooltipEl.style.top = Math.max(8, y - 8) + 'px';
+  tooltipEl.innerHTML = `<div style="font-weight:700;margin-bottom:6px">${year} år</div>` + items.map(it=>`<div style="display:flex;justify-content:space-between;gap:12px"><div style="display:flex;gap:8px;align-items:center"><span style="width:10px;height:10px;background:${it.color};display:inline-block;border-radius:2px"></span>${it.label}</div><div style="font-weight:700">${fmt(it.value, $('currency').value)}</div></div>`).join('');
+}
+
+/* Read UI opts (including lumps) */
+function readOpts(){
+  return {
+    currency: $('currency').value,
+    loanAmount: parseFloat($('loanAmount').value)||0,
+    loanRate: parseFloat($('loanRate').value)||0,
+    minAmortYearPct: parseFloat($('minAmortYearPct').value)||0,
+    extraAmort: parseFloat($('extraAmort').value)||0,
+    investMonthly: parseFloat($('investMonthly').value)||0,
+    expReturn: parseFloat($('expReturn').value)||0,
+    volatility: parseFloat($('volatility').value)||0,
+    years: parseFloat($('years').value)||0,
+    mcRuns: parseInt($('mcRuns').value)||100,
+    interestTaxReliefPct: parseFloat($('interestTaxReliefPct').value)||0,
+    invTaxPct: parseFloat($('invTaxPct').value)||0,
+    splitPercent: parseFloat($('splitPercent').value)||0,
+    strategy: $('strategy').value,
+    enableCrash: $('enableCrash').checked,
+    crashDepth: parseFloat($('crashDepth').value)||0,
+    crashYear: parseFloat($('crashYear').value)||0,
+    doMonteCarlo: $('doMonteCarlo').checked,
+    autoRedirect: $('autoRedirect').checked,
+    lumps: readLumpsFromDOM()
+  };
+}
+
+/* Orchestrator: run deterministic strategies and Monte Carlo (split) */
+function runSim(){
+  const opts = readOpts();
+  $('displayCurrency').innerText = opts.currency;
+  const months = Math.round(opts.years*12);
+  const labels = [];
+  for(let y=0;y<=opts.years;y++) labels.push(String(y));
+
+  const amortRes = simulateOnce('amort', opts);
+  const investRes = simulateOnce('invest', opts);
+  const splitRes = simulateOnce('split', opts);
+
+  const amortLoanY = amortRes.series.filter((_,i)=>i%12===0).map(s=>s.loanBal);
+  const investLoanY = investRes.series.filter((_,i)=>i%12===0).map(s=>s.loanBal);
+  const splitLoanY = splitRes.series.filter((_,i)=>i%12===0).map(s=>s.loanBal);
+  const amortPortY = amortRes.series.filter((_,i)=>i%12===0).map(s=>s.portfolio);
+  const investPortY = investRes.series.filter((_,i)=>i%12===0).map(s=>s.portfolio);
+  const splitPortY = splitRes.series.filter((_,i)=>i%12===0).map(s=>s.portfolio);
+
+  let mcMedian=null, mcP10=null, mcP90=null, mcSeriesMedian=null, payoffYear=null;
+  if(opts.doMonteCarlo){
+    const finalVals = [];
+    const mcYearSeries = [];
+    for(let r=0;r<opts.mcRuns;r++){
+      const monthlyReturns = gbmMonthlySeries(opts.expReturn/100, opts.volatility/100, months);
+      if(opts.enableCrash){
+        const crashIndex = Math.round(opts.crashYear*12);
+        if(crashIndex>=0 && crashIndex<=months) monthlyReturns[crashIndex] = opts.crashDepth/100;
+      }
+      const res = simulateOnce('split', opts, monthlyReturns.slice());
+      finalVals.push(res.portfolioAfterTax - res.netInterestCost);
+      const yearly = res.series.filter((_,i)=>i%12===0).map(s=>({loan:s.loanBal, port:s.portfolio}));
+      mcYearSeries.push(yearly);
+    }
+    finalVals.sort((a,b)=>a-b);
+    const idx = p => Math.max(0, Math.min(finalVals.length-1, Math.floor(p*(finalVals.length-1))));
+    mcMedian = finalVals[idx(0.5)]; mcP10 = finalVals[idx(0.1)]; mcP90 = finalVals[idx(0.9)];
+    mcSeriesMedian = [];
+    for(let y=0;y<=opts.years;y++){
+      const arr = mcYearSeries.map(s=>s[y].port);
+      arr.sort((a,b)=>a-b);
+      mcSeriesMedian.push(arr[Math.floor(arr.length/2)]);
+    }
+  }
+
+  // Build datasets for chart
+  chart.labels = labels;
+  chart.datasets = [
+    {key:'loan_amort', label:'Skuld — Amortera', data: amortLoanY, color:'rgba(255,99,132,0.95)', lineWidth:2, style:'dashed', visible:true, hint:'skuld'},
+    {key:'loan_invest', label:'Skuld — Investera', data: investLoanY, color:'rgba(255,159,64,0.95)', lineWidth:2, style:'dashed', visible:true, hint:'skuld'},
+    {key:'loan_split', label:'Skuld — Dela', data: splitLoanY, color:'rgba(255,205,86,0.95)', lineWidth:2, style:'dashed', visible:true, hint:'skuld'},
+
+    {key:'port_amort', label:'Portfölj — Amortera', data: amortPortY, color:'rgba(99,255,132,0.95)', lineWidth:2, style:'solid', fill:true, visible:true, hint:'portfölj'},
+    {key:'port_invest', label:'Portfölj — Investera', data: investPortY, color:'rgba(64,159,255,0.95)', lineWidth:2, style:'solid', fill:true, visible:true, hint:'portfölj'},
+    {key:'port_split', label:'Portfölj — Dela', data: splitPortY, color:'rgba(120,120,255,0.95)', lineWidth:2, style:'solid', fill:true, visible:true, hint:'portfölj'}
+  ];
+
+  if(mcSeriesMedian) chart.datasets.push({key:'mc_median', label:'MC Median — Portfölj (Dela)', data: mcSeriesMedian, color:'rgba(160,100,255,0.95)', lineWidth:3, style:'solid', visible:true, hint:'MC median'});
+
+  // Save last simulation for export
+  window._lastSimulation = {opts, amortRes, investRes, splitRes, mc:{median:mcMedian,p10:mcP10,p90:mcP90}};
+
+  // Update UI summary
+  $('finalAmort').innerText = fmt(amortRes.portfolioAfterTax - amortRes.netInterestCost, opts.currency);
+  $('finalInvest').innerText = fmt(investRes.portfolioAfterTax - investRes.netInterestCost, opts.currency);
+  $('finalSplit').innerText = fmt(splitRes.portfolioAfterTax - splitRes.netInterestCost, opts.currency);
+  if(mcMedian !== null) $('mcStats').innerText = `${fmt(mcMedian,opts.currency)} (10%: ${fmt(mcP10,opts.currency)}, 90%: ${fmt(mcP90,opts.currency)})`;
+  else $('mcStats').innerText = 'Monte Carlo ej aktiverat';
+  $('totalInterest').innerText = fmt(amortRes.netInterestCost, opts.currency);
+
+  // Draw chart & legend
+  setupCanvas();
+  buildLegend($('legend'));
+  drawChart();
+
+  // If loan paid earlier, optionally annotate payoff year in DOM (activeYear will show when hovering)
+  if(splitRes.loanPaidAtMonth !== null){
+    payoffYear = Math.round(splitRes.loanPaidAtMonth / 12 * 100)/100;
+    // show in summary if desired (not drawn on canvas as annotation yet)
+    // we could add an annotation drawing in future iteration
+  }
+}
+
+/* Pointer handlers for tooltip and active year */
+function attachPointerHandlers(){
+  const c = chart.canvas;
+  function getPointer(e){
+    const rect = c.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {x: clientX - rect.left, y: clientY - rect.top, clientX, clientY};
+  }
+  function onMove(e){
+    if(!chart.ctx) return;
+    const p = getPointer(e);
+    const {l,r,t,b} = chart.padding;
+    const w = c.clientWidth, h = c.clientHeight;
+    const plotW = w - l - r;
+    const points = chart.labels.length;
+    const relX = Math.max(0, Math.min(plotW, p.x - l));
+    const idx = Math.round(relX / plotW * (points-1));
+    chart.hoverIndex = idx;
+    const items = chart.datasets.filter(ds=>ds.visible).map(ds=>({label:ds.label, color:ds.color, value: ds.data[idx] || 0}));
+    showTooltip(p.clientX - c.getBoundingClientRect().left, p.clientY - c.getBoundingClientRect().top, items, chart.labels[idx]);
+    $('activeYear').innerText = chart.labels[idx];
+    drawChart();
+    e.preventDefault && e.preventDefault();
+  }
+  function onLeave(){
+    tooltipEl.style.display='none';
+    chart.hoverIndex = -1; drawChart();
+  }
+  c.addEventListener('mousemove', onMove);
+  c.addEventListener('touchmove', onMove, {passive:false});
+  c.addEventListener('mouseleave', onLeave);
+  c.addEventListener('touchend', onLeave);
+}
+
+/* CSV export includes lumps list and MC summary */
+function exportCSV(){
+  const sim = window._lastSimulation;
+  if(!sim){ alert('Kör simulering först.'); return; }
+  const opts = sim.opts;
+  const months = Math.round(opts.years*12);
+  let csv = 'Lumps: år,belopp\n';
+  (opts.lumps||[]).forEach(l=> csv += `${l.year},${l.amount}\n`);
+  csv += '\nmånad,år,skuld_amort,portfölj_amort,skuld_invest,portfölj_invest,skuld_dela,portfölj_dela\n';
+  for(let m=0;m<=months;m++){
+    const y = (m/12).toFixed(2);
+    const a = sim.amortRes.series[m] || {};
+    const b = sim.investRes.series[m] || {};
+    const c = sim.splitRes.series[m] || {};
+    csv += [m, y,
+            (a.loanBal||0).toFixed(2),
+            (a.portfolio||0).toFixed(2),
+            (b.loanBal||0).toFixed(2),
+            (b.portfolio||0).toFixed(2),
+            (c.loanBal||0).toFixed(2),
+            (c.portfolio||0).toFixed(2)
+           ].join(',') + '\n';
+  }
+  if(sim.mc && sim.mc.median !== null){
+    csv += `\nMonteCarloMedian,${sim.mc.median}\nMonteCarlo10,${sim.mc.p10}\nMonteCarlo90,${sim.mc.p90}\n`;
+  }
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'simulering_amortering_investering_lumps.csv'; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* Save/load settings (including lumps) */
+function saveSettings(){
+  const opts = readOpts();
+  localStorage.setItem('amortSimSettings_v3', JSON.stringify(opts));
+  alert('Inställningar sparade lokalt.');
+}
+function loadSettings(){
+  const s = localStorage.getItem('amortSimSettings_v3');
+  if(!s){ alert('Inga sparade inställningar hittades.'); return; }
+  const opts = JSON.parse(s);
+  $('currency').value = opts.currency;
+  $('loanAmount').value = opts.loanAmount;
+  $('loanRate').value = opts.loanRate;
+  $('minAmortYearPct').value = opts.minAmortYearPct;
+  $('extraAmort').value = opts.extraAmort;
+  $('investMonthly').value = opts.investMonthly;
+  $('expReturn').value = opts.expReturn;
+  $('volatility').value = opts.volatility;
+  $('years').value = opts.years;
+  $('mcRuns').value = opts.mcRuns;
+  $('interestTaxReliefPct').value = opts.interestTaxReliefPct;
+  $('invTaxPct').value = opts.invTaxPct;
+  $('splitPercent').value = opts.splitPercent;
+  $('strategy').value = opts.strategy || 'split';
+  $('enableCrash').checked = opts.enableCrash;
+  $('doMonteCarlo').checked = opts.doMonteCarlo;
+  $('autoRedirect').checked = opts.autoRedirect;
+  $('crashDepth').value = opts.crashDepth;
+  $('crashYear').value = opts.crashYear;
+  document.getElementById('crashControls').style.display = opts.enableCrash ? 'block' : 'none';
+  // rebuild lumps DOM
+  $('lumpsContainer').innerHTML = '';
+  (opts.lumps||[]).forEach(l => $('lumpsContainer').appendChild(createLumpRow(l.year, l.amount)));
+  alert('Inställningar laddade.');
+}
+
+/* Wiring */
+$('runBtn').addEventListener('click', runSim);
+$('exportCSV').addEventListener('click', exportCSV);
+$('saveSettings').addEventListener('click', saveSettings);
+$('loadSettings').addEventListener('click', loadSettings);
+$('resetBtn').addEventListener('click', ()=>{ localStorage.removeItem('amortSimSettings_v3'); location.reload(); });
+$('printBtn').addEventListener('click', ()=> window.print());
+$('enableCrash').addEventListener('change', e => { document.getElementById('crashControls').style.display = e.target.checked ? 'block' : 'none'; });
+
+window.addEventListener('load', ()=>{
+  // example initial lumps
+  $('lumpsContainer').appendChild(createLumpRow(2,100000));
+  $('lumpsContainer').appendChild(createLumpRow(5,200000));
+  setupCanvas();
+  attachPointerHandlers();
+  runSim();
+  window.addEventListener('resize', ()=>{ clearTimeout(window._rs); window._rs = setTimeout(()=>{ setupCanvas(); drawChart(); }, 120); });
+});
+
+</script>
+</body>
+</html>
