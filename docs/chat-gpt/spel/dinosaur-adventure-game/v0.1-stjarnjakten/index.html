@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Stjärnjakten — Ett enkelt touchspel</title>
+<style>
+  :root{
+    --bg: linear-gradient(180deg,#a0e9ff 0%,#7bdff2 60%,#6dc7a6 100%);
+    --ui: rgba(255,255,255,0.9);
+    --accent: #ffd54a;
+    --danger: #ff6b6b;
+    --friendly: #ffffff;
+  }
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    user-select:none;
+    touch-action: manipulation;
+  }
+  #game {
+    position:relative;
+    max-width:900px;
+    margin: 8px auto;
+    background: linear-gradient(#87ceeb,#e0f7fa);
+    border-radius:12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    overflow:hidden;
+  }
+  svg {
+    display:block;
+    width:100%;
+    height:70vh;
+    min-height:480px;
+    background: transparent;
+  }
+  .hud{
+    position:absolute;
+    left:12px;
+    top:12px;
+    color:#023e2f;
+    background:var(--ui);
+    padding:8px 12px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+    font-weight:600;
+  }
+  .hud .small { font-size:0.9rem; color:#3b3b3b; font-weight:600 }
+  .controls {
+    position:absolute;
+    bottom:14px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:12px;
+    align-items:center;
+    pointer-events:none; /* allow children to handle touches */
+  }
+  .btn {
+    width:84px;
+    height:84px;
+    border-radius:18px;
+    background:var(--ui);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+    font-size:30px;
+    color:#1b1b1b;
+    user-select:none;
+    touch-action: none;
+    pointer-events:auto;
+  }
+  .btn:active { transform: translateY(2px); }
+  #restart {
+    position:absolute;
+    right:12px;
+    top:12px;
+    background:var(--ui);
+    padding:8px 10px;
+    border-radius:10px;
+    cursor:pointer;
+    box-shadow:0 6px 14px rgba(0,0,0,0.08);
+    pointer-events:auto;
+  }
+  #message {
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.95);
+    padding:20px 26px;
+    border-radius:14px;
+    font-size:1.2rem;
+    display:none;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,0.12);
+    pointer-events:none;
+  }
+  #message.show { display:block; pointer-events:auto; }
+  #message button {
+    margin-top:12px;
+    padding:8px 12px;
+    border-radius:10px;
+    border:none;
+    background:var(--accent);
+    cursor:pointer;
+    font-weight:700;
+  }
+  /* small helper */
+  .tiny { font-size:0.9rem; color:#1b5e20}
+  footer { text-align:center; font-size:0.85rem; color:#053; margin:12px 0 40px 0}
+</style>
+</head>
+<body>
+<div id="game" role="application" aria-label="Stjärnjakten, ett barnspel">
+  <svg id="svg" viewBox="0 0 900 600" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#a0e9ff"/>
+        <stop offset="1" stop-color="#7bdff2"/>
+      </linearGradient>
+      <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="6" result="b"/>
+        <feOffset dy="6"/>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <g id="starPath">
+        <polygon points="0,-12 3.5,-4 12,-4 5,1 7.5,9 0,4 -7.5,9 -5,1 -12,-4 -3.5,-4" />
+      </g>
+    </defs>
+
+    <rect x="0" y="0" width="900" height="600" fill="url(#sky)"></rect>
+
+    <!-- Ground -->
+    <rect id="ground" x="0" y="540" width="900" height="60" fill="#6dc7a6"></rect>
+
+    <!-- Platforms container -->
+    <g id="platforms"></g>
+
+    <!-- Obstacles container -->
+    <g id="obstacles"></g>
+
+    <!-- Stars container -->
+    <g id="stars"></g>
+
+    <!-- Player -->
+    <g id="player" transform="translate(80,460)" style="filter:url(#softShadow)">
+      <circle id="playerBody" cx="0" cy="0" r="26" fill="#ffb3c1" stroke="#ff6b81" stroke-width="3"></circle>
+      <g id="face" transform="translate(-7,-3)">
+        <ellipse cx="7" cy="3" rx="9" ry="6" fill="#fff" opacity="0.95"></ellipse>
+        <circle cx="3" cy="3" r="3.2" fill="#333"></circle>
+        <circle cx="11" cy="3" r="3.2" fill="#333"></circle>
+        <path d="M2,8 C5,12 9,12 12,8" stroke="#663" fill="none" stroke-linecap="round" stroke-width="2"/>
+      </g>
+    </g>
+
+    <!-- UI hints (inside svg so scale) -->
+    <text id="hint" x="18" y="30" fill="#035" font-weight="700" font-size="18">Samla stjärnorna! Tryck vänster/höger/hopp</text>
+  </svg>
+
+  <div class="hud" id="hud">
+    Poäng: <span id="score">0</span><span class="small"> • </span>
+    Nivå: <span id="level">1</span>
+    <div class="small tiny">Stjärnor kvar: <span id="starsLeft">0</span></div>
+  </div>
+
+  <div id="restart">Starta om</div>
+
+  <div class="controls" aria-hidden="false">
+    <div class="btn" id="leftBtn" aria-label="Vänster">◀</div>
+    <div class="btn" id="jumpBtn" aria-label="Hoppa">▲</div>
+    <div class="btn" id="rightBtn" aria-label="Höger">▶</div>
+  </div>
+
+  <div id="message" role="dialog" aria-live="polite">
+    <div id="messageText"></div>
+    <button id="messageButton">Fortsätt</button>
+  </div>
+</div>
+
+<footer>Skapat för surfplatta. Tryck knapparna för att styra.</footer>
+
+<script>
+/*
+  Stjärnjakten - Enkel touchvänlig spelmotor i en fil.
+  Kommentarer: Anpassa colors, nivåer, antal stjärnor här.
+*/
+
+// Spelvariabler
+const svg = document.getElementById('svg');
+const playerGroup = document.getElementById('player');
+const playerBody = document.getElementById('playerBody');
+const platformsG = document.getElementById('platforms');
+const starsG = document.getElementById('stars');
+const obstaclesG = document.getElementById('obstacles');
+
+const scoreEl = document.getElementById('score');
+const levelEl = document.getElementById('level');
+const starsLeftEl = document.getElementById('starsLeft');
+const message = document.getElementById('message');
+const messageText = document.getElementById('messageText');
+const messageButton = document.getElementById('messageButton');
+
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+const jumpBtn = document.getElementById('jumpBtn');
+const restartBtn = document.getElementById('restart');
+
+let width = 900, height = 600;
+let gravity = 0.8;
+let friction = 0.86;
+
+let player = {
+  x: 80, y: 460, vx:0, vy:0, r:26, onGround:false
+};
+
+let controls = { left:false, right:false, jump:false };
+let score = 0;
+let level = 1;
+let stars = [];
+let platforms = [];
+let obstacles = [];
+let starsCollected = 0;
+let gameRunning = true;
+
+// Anpassningsparametrar (lätt att tweaka)
+function levelConfig(level){
+  return {
+    starCount: Math.min(5 + Math.floor(level*0.8), 10),
+    platformCount: 3 + Math.floor(level*0.6),
+    obstacleCount: Math.floor(level/2),
+    speedMultiplier: 1 + level*0.06
+  }
+}
+
+// Nivågenerator (skapar plattformar, stjärnor och hinder)
+function makeLevel(level){
+  platformsG.innerHTML = '';
+  starsG.innerHTML = '';
+  obstaclesG.innerHTML = '';
+  platforms = [];
+  stars = [];
+  obstacles = [];
+  const cfg = levelConfig(level);
+
+  // Basplattform (ground)
+  platforms.push({x:0,y:540,w:900,h:60});
+
+  // Generera plattformar i luften
+  for(let i=0;i<cfg.platformCount;i++){
+    let w = 120 + Math.random()*140;
+    let x = 80 + Math.random()*(width - 160 - w);
+    let y = 380 - i*50 + Math.random()*200;
+    y = Math.max(120, Math.min(480, y));
+    platforms.push({x,y,w,h:14});
+  }
+
+  // Lägg till små hinder (röda block) på slumpade ställen
+  for(let i=0;i<cfg.obstacleCount;i++){
+    let p = platforms[1 + (i % Math.max(1, platforms.length-1))];
+    let x = p.x + 20 + Math.random()*(p.w-60);
+    let y = p.y - 22;
+    obstacles.push({x,y,w:32,h:22});
+  }
+
+  // Skapa stjärnor - sprid över plattformar
+  for(let i=0;i<cfg.starCount;i++){
+    // välj en plattform (inte marken) helst
+    let pl = platforms[1 + Math.floor(Math.random()*(platforms.length-1))] || platforms[0];
+    let x = pl.x + 20 + Math.random()*(pl.w-40);
+    let y = pl.y - 28 - Math.random()*18;
+    let scale = 1 + Math.random()*0.6;
+    stars.push({x,y,scale,got:false,angle: Math.random()*Math.PI*2});
+  }
+
+  // Render platforms
+  platforms.forEach(p=>{
+    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    rect.setAttribute('x',p.x);
+    rect.setAttribute('y',p.y);
+    rect.setAttribute('width',p.w);
+    rect.setAttribute('height',p.h);
+    rect.setAttribute('rx',6);
+    rect.setAttribute('fill','#7aa27a');
+    rect.setAttribute('stroke','#4f7a59');
+    rect.setAttribute('stroke-width',2);
+    platformsG.appendChild(rect);
+  });
+
+  // Render obstacles
+  obstacles.forEach(ob=>{
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    const r = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    r.setAttribute('x',ob.x); r.setAttribute('y',ob.y);
+    r.setAttribute('width',ob.w); r.setAttribute('height',ob.h);
+    r.setAttribute('rx',6);
+    r.setAttribute('fill','#ff6b6b');
+    r.setAttribute('stroke','#a33');
+    r.setAttribute('stroke-width',2);
+    g.appendChild(r);
+    obstaclesG.appendChild(g);
+  });
+
+  // Render stars
+  stars.forEach((s,i)=>{
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute('transform',`translate(${s.x},${s.y}) scale(${s.scale})`);
+    g.setAttribute('data-i',i);
+    const use = document.createElementNS("http://www.w3.org/2000/svg","use");
+    use.setAttributeNS('http://www.w3.org/1999/xlink','href','#starPath');
+    use.setAttribute('fill','#ffd54a');
+    use.setAttribute('stroke','#e6b800');
+    use.setAttribute('stroke-width',1.5);
+    g.appendChild(use);
+    starsG.appendChild(g);
+  });
+
+  // Update HUD
+  starsCollected = 0;
+  starsLeftEl.textContent = stars.filter(s=>!s.got).length;
+}
+
+// Kollisionshjälpare (AABB) för plattformstopp
+function isOnPlatform(px,py,pr){
+  for(let p of platforms){
+    // check if player's feet are standing on top of platform
+    if(px + pr > p.x && px - pr < p.x + p.w){
+      let feetY = py + pr;
+      if(Math.abs(feetY - p.y) < 10 && player.vy >= 0){
+        return p;
+      }
+    }
+  }
+  return null;
+}
+
+// Kollisions mot hinder (Förenklad AABB)
+function hitObstacle(px,py){
+  for(let ob of obstacles){
+    if(px > ob.x - 10 && px < ob.x + ob.w + 10 && py > ob.y - 10 && py < ob.y + ob.h + 10){
+      return ob;
+    }
+  }
+  return null;
+}
+
+// Uppdatera spelobjekt per frame
+let lastTs = 0;
+function update(ts){
+  if(!gameRunning) return;
+  if(!lastTs) lastTs = ts;
+  let dt = Math.min(40, ts - lastTs);
+  lastTs = ts;
+
+  // Kontroller och rörelser
+  const cfg = levelConfig(level);
+  let speed = 2.6 * cfg.speedMultiplier;
+  if(controls.left) player.vx = -speed;
+  else if(controls.right) player.vx = speed;
+  else player.vx *= friction;
+
+  // Hopp
+  if(controls.jump && player.onGround){
+    player.vy = -13 - Math.random()*2;
+    player.onGround = false;
+    playBeep(880,0.06);
+  }
+
+  player.vy += gravity * (dt/16);
+  player.x += player.vx * (dt/16);
+  player.y += player.vy * (dt/16);
+
+  // Väggar
+  player.x = Math.max(player.r, Math.min(width - player.r, player.x));
+
+  // Plattforms-kontakt
+  let p = isOnPlatform(player.x, player.y, player.r);
+  if(p){
+    player.onGround = true;
+    player.vy = 0;
+    player.y = p.y - player.r;
+  } else if(player.y + player.r >= 600){ // fallback ground
+    player.onGround = true;
+    player.vy = 0;
+    player.y = 600 - player.r;
+  } else {
+    player.onGround = false;
+  }
+
+  // Kollidera med hinder
+  let ob = hitObstacle(player.x, player.y);
+  if(ob){
+    // kort knockback och poängavdrag (men inte för barn för hårt)
+    player.vx = -player.vx * 0.6;
+    player.vy = -6;
+    score = Math.max(0, score - 2);
+    updateHUD();
+    playBeep(220,0.08);
+  }
+
+  // Kolla stjärninsamling
+  stars.forEach((s, i)=>{
+    if(s.got) return;
+    let dx = player.x - s.x;
+    let dy = player.y - s.y;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < player.r + 18){
+      s.got = true;
+      starsCollected++;
+      score += 10;
+      updateHUD();
+      // Animera stjärnan: ta bort från DOM och spela ljud
+      const node = starsG.querySelector(`g[data-i="${i}"]`);
+      if(node){
+        node.animate([{transform: node.getAttribute('transform')},{transform:`translate(${s.x},${s.y-40}) scale(${s.scale})`, opacity:0}], {duration:420, easing:'ease-out'}).onfinish = ()=>node.remove();
+      }
+      playBeep(1320,0.09);
+      // se om nivån är klar
+      if(starsCollected >= stars.length){
+        levelComplete();
+      } else {
+        starsLeftEl.textContent = stars.filter(s=>!s.got).length;
+      }
+    }
+  });
+
+  // Håll spelaren inom vy om man vill scrolla (just nu statisk)
+  render();
+  requestAnimationFrame(update);
+}
+
+function render(){
+  playerGroup.setAttribute('transform',`translate(${player.x},${player.y})`);
+  // Låt stjärnorna snurra lite
+  stars.forEach((s,i)=>{
+    if(s.got) return;
+    s.angle += 0.03;
+    const node = starsG.querySelector(`g[data-i="${i}"]`);
+    if(node){
+      node.setAttribute('transform',`translate(${s.x + Math.sin(s.angle)*4},${s.y + Math.cos(s.angle)*4}) scale(${s.scale}) rotate(${s.angle*30})`);
+    }
+  });
+}
+
+// HUD uppdatering
+function updateHUD(){
+  scoreEl.textContent = score;
+  levelEl.textContent = level;
+  starsLeftEl.textContent = stars.filter(s=>!s.got).length;
+}
+
+// Nivå klar
+function levelComplete(){
+  gameRunning = false;
+  playMelody();
+  messageText.innerHTML = `Bra jobbat! Du klarade nivå ${level}.<br>Poäng: ${score}`;
+  message.classList.add('show');
+  messageButton.focus();
+}
+
+// Fortsätt-knapp
+messageButton.addEventListener('click', ()=>{
+  message.classList.remove('show');
+  level++;
+  startLevel();
+});
+
+// Starta eller återstarta nivå
+function startLevel(){
+  // Reset spelarposition lite
+  player.x = 80; player.y = 460; player.vx = 0; player.vy = 0; player.onGround = false;
+  makeLevel(level);
+  gameRunning = true;
+  updateHUD();
+  lastTs = 0;
+  requestAnimationFrame(update);
+}
+
+// Ljudhjälpare - små toner med WebAudio
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+function playBeep(freq, time=0.06){
+  try{
+    ensureAudio();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freq;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 0.01);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + time);
+    o.stop(audioCtx.currentTime + time + 0.02);
+  } catch(e){ /* ljud kan blockeras */ }
+}
+
+function playMelody(){
+  try{
+    ensureAudio();
+    const seq = [880, 1100, 1320, 1760];
+    let t = audioCtx.currentTime;
+    seq.forEach((f,i)=>{
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sawtooth'; o.frequency.value = f;
+      g.gain.value = 0.0001;
+      o.connect(g); g.connect(audioCtx.destination);
+      g.gain.exponentialRampToValueAtTime(0.12, t + i*0.12);
+      o.start(t + i*0.12);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i*0.12 + 0.1);
+      o.stop(t + i*0.12 + 0.14);
+    });
+  } catch(e){}
+}
+
+// Touch- och knapphantering
+function setupControls(){
+  // Common helpers
+  function bindBtn(el, onStart, onEnd){
+    // Touch
+    el.addEventListener('touchstart', (e)=>{ e.preventDefault(); onStart(); }, {passive:false});
+    el.addEventListener('touchend', (e)=>{ e.preventDefault(); onEnd(); }, {passive:false});
+    // Mouse fallback
+    el.addEventListener('mousedown', (e)=>{ e.preventDefault(); onStart(); });
+    document.addEventListener('mouseup', (e)=>{ onEnd(); });
+    // If leaving the button area with touchcancel
+    el.addEventListener('touchcancel', (e)=>{ e.preventDefault(); onEnd(); }, {passive:false});
+  }
+
+  bindBtn(leftBtn, ()=>controls.left = true, ()=>controls.left = false);
+  bindBtn(rightBtn, ()=>controls.right = true, ()=>controls.right = false);
+  bindBtn(jumpBtn, ()=>controls.jump = true, ()=>controls.jump = false);
+
+  // Restart
+  restartBtn.addEventListener('click', ()=>{
+    score = 0; level = 1; updateHUD(); startLevel();
+  });
+
+  // Also allow tapping on the play area to jump (child-friendly)
+  svg.addEventListener('touchstart', (e)=>{
+    if(e.target.closest('.btn')) return;
+    controls.jump = true;
+    setTimeout(()=>controls.jump = false, 120);
+  }, {passive:false});
+  svg.addEventListener('mousedown', (e)=>{
+    if(e.target.closest('.btn')) return;
+    controls.jump = true;
+    setTimeout(()=>controls.jump = false, 120);
+  });
+
+  // Optional: swipe left/right for movement
+  let touchStartX = null;
+  svg.addEventListener('touchstart', (e)=>{
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+  }, {passive:true});
+  svg.addEventListener('touchend', (e)=>{
+    if(touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if(dx < -40){ controls.left = true; setTimeout(()=>controls.left=false,200); }
+    if(dx > 40){ controls.right = true; setTimeout(()=>controls.right=false,200); }
+    touchStartX = null;
+  }, {passive:true});
+}
+
+// Resize hantering (håller logik i 900x600 coordinate space)
+function onResize(){
+  // här kan vi justera om vi vill ha olika vyer beroende på skärm
+}
+window.addEventListener('resize', onResize);
+
+// Init
+setupControls();
+startLevel(); // starta nivå 1 automatiskt
+
+// För att låta mus- eller touchinteraktion väcka ljud (autoplay-policy)
+document.body.addEventListener('touchstart', function one(){ try{ playBeep(880,0.01);}catch(e){} document.body.removeEventListener('touchstart', one); }, {passive:true});
+document.body.addEventListener('mousedown', function one2(){ try{ playBeep(880,0.01);}catch(e){} document.body.removeEventListener('mousedown', one2); });
+
+</script>
+</body>
+</html>
