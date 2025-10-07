@@ -8,6 +8,53 @@
 
   let flippedCount = 0;
 
+  // URL history management
+  function updateURL(pageNumber, replaceState = false) {
+    const url = new URL(window.location);
+    url.searchParams.set('page', pageNumber);
+    if (replaceState) {
+      window.history.replaceState({ page: pageNumber }, '', url);
+    } else {
+      window.history.pushState({ page: pageNumber }, '', url);
+    }
+  }
+
+  function getPageFromURL() {
+    const url = new URL(window.location);
+    const pageParam = url.searchParams.get('page');
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10);
+      if (pageNum >= 1 && pageNum <= total) {
+        return pageNum;
+      }
+    }
+    return 1; // Default to page 1
+  }
+
+  function navigateToPage(targetPage, updateHistory = true) {
+    targetPage = Math.max(1, Math.min(targetPage, total));
+    
+    // Reset all pages
+    pages.forEach(page => {
+      page.classList.remove('flipped');
+      page.style.zIndex = 100 - (Number(page.dataset.page) - 1);
+    });
+
+    // Flip pages up to target page
+    flippedCount = targetPage - 1;
+    for (let i = 0; i < flippedCount; i++) {
+      const page = pages[i];
+      page.classList.add('flipped');
+      page.style.zIndex = 0;
+    }
+
+    updateIndicator();
+    
+    if (updateHistory) {
+      updateURL(targetPage);
+    }
+  }
+
   function getNextNotFlipped() {
     return pages.find(p => !p.classList.contains('flipped'));
   }
@@ -31,6 +78,7 @@
     }, 10);
     flippedCount++;
     updateIndicator();
+    updateURL(flippedCount + 1);
   }
 
   function flipPrev(){
@@ -41,6 +89,7 @@
     lastFlipped.style.zIndex = 100 - (Number(lastFlipped.dataset.page) - 1);
     flippedCount--;
     updateIndicator();
+    updateURL(flippedCount + 1);
   }
 
   // Klick och touch på klick-områden
@@ -126,7 +175,16 @@
     if (e.key === 'ArrowLeft' || e.key === 'PageUp') flipPrev();
   });
 
-  updateIndicator();
+  // Handle browser back/forward buttons
+  window.addEventListener('popstate', (e) => {
+    const pageNumber = e.state?.page || getPageFromURL();
+    navigateToPage(pageNumber, false);
+  });
+
+  // Initialize to page from URL or page 1
+  const initialPage = getPageFromURL();
+  navigateToPage(initialPage, false);
+  updateURL(initialPage, true); // Replace initial state
 
   prevBtn.addEventListener('keyup', (e) => { if (e.key === ' '|| e.key === 'Enter') flipPrev(); });
   nextBtn.addEventListener('keyup', (e) => { if (e.key === ' '|| e.key === 'Enter') flipNext(); });
