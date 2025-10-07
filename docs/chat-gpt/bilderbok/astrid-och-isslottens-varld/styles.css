@@ -1,0 +1,271 @@
+:root{
+  --bg:#0b2540;
+  --paper:#f8fbff;
+  --accent:#9be7ff;
+  --ink:#113243;
+  --muted:#6b7c86;
+  --shadow: 0 10px 30px rgba(2,12,25,0.5);
+  --page-width: 520px;
+  --page-height: 700px;
+  --image-size: 320px;
+  font-family: 'Nunito', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(155,231,255,0.08), transparent 10%),
+    linear-gradient(180deg, #071526 0%, #07223a 100%);
+  color:var(--paper);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+.page-app{
+  width:100%;
+  max-width:1200px;
+  text-align:center;
+  min-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+header h1{
+  margin:0 0 6px 0;
+  font-size:28px;
+  color:var(--paper);
+  letter-spacing:0.4px;
+}
+.subtitle{
+  margin:0 0 24px 0;
+  color:var(--muted);
+}
+
+/* Book layout */
+.book-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  flex-direction:column;
+  flex: 1;
+  min-height: 0;
+}
+
+.book-container{
+  position:relative;
+  display:grid;
+  place-items:center;
+  min-height: calc(var(--page-height) + 40px);
+}
+
+.book{
+  width: calc(var(--page-width) + 40px);
+  perspective: 2000px;
+  position:relative;
+  display:grid;
+  place-items:center;
+}
+
+.page{
+  width:var(--page-width);
+  height:var(--page-height);
+  background:linear-gradient(180deg,var(--paper), #eef7ff 60%);
+  color:var(--ink);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  position:absolute;
+  left:50%;
+  transform-origin:left center;
+  transform:translateX(-50%);
+  transition: transform 700ms cubic-bezier(.2,.8,.2,1), z-index 0ms linear 0ms;
+  overflow:hidden;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:0;
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:pointer;
+  backface-visibility:hidden;
+  touch-action: pan-x;
+}
+
+.page-inner{
+  text-align:left;
+  width:100%;
+  padding:32px 28px 24px 28px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.page-image{
+  width:var(--image-size);
+  height:var(--image-size);
+  background:linear-gradient(135deg,#e5f3fa 80%, #c6e9ff 100%);
+  border:3px solid #d1eaff;
+  border-radius:16px;
+  margin-bottom:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  box-shadow:0 3px 14px rgba(100,180,255,0.07);
+  overflow:hidden;
+  user-select: none;
+  touch-action: none;
+}
+.page-image img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:14px;
+  display:block;
+}
+.page-image svg {
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* Klickområden för bläddring: synliga på desktop, osynliga på mobil (kan tas bort) */
+.click-area {
+  position:absolute;
+  top:0; bottom:0;
+  z-index:10;
+  cursor:pointer;
+  transition: background 0.2s;
+}
+.click-area.left {
+  left:0; width:25%;
+  background:rgba(155,231,255,0.09);
+}
+.click-area.right {
+  right:0; width:75%;
+  background:rgba(155,231,255,0.04);
+}
+.click-area:hover {
+  background:rgba(155,231,255,0.18);
+}
+@media (max-width:900px){
+  .click-area {background:transparent;}
+}
+
+/* Slight visual difference for pages to imitate thickness */
+.page:nth-child(odd){
+  box-shadow: 0 12px 30px rgba(2,12,25,0.45);
+}
+
+.page h2{
+  margin-top:0;
+  margin-bottom:10px;
+  color:#0e3b4a;
+  text-align:center;
+}
+.page p{
+  color:#09323e;
+  line-height:1.5;
+  margin-bottom:10px;
+  font-size:16px;
+  text-align:left;
+}
+
+/* Flipped state */
+.page.flipped{
+  transform: translateX(-50%) rotateY(-180deg);
+  z-index:0 !important;
+  transition: transform 700ms cubic-bezier(.2,.8,.2,1);
+  box-shadow: inset -10px 0 30px rgba(0,0,0,0.06);
+}
+
+/* Stack order */
+.page[data-page="1"]{ z-index:100; left:calc(50% - 2px) }
+.page[data-page="2"]{ z-index:99; left:calc(50% - 1px) }
+.page[data-page="3"]{ z-index:98 }
+.page[data-page="4"]{ z-index:97 }
+.page[data-page="5"]{ z-index:96 }
+.page[data-page="6"]{ z-index:95 }
+.page[data-page="7"]{ z-index:94 }
+.page[data-page="8"]{ z-index:93 }
+.page[data-page="9"]{ z-index:92 }
+.page[data-page="10"]{ z-index:91 }
+
+.page.flipped[data-page="1"]{ left:20% }
+.page.flipped[data-page="2"]{ left:20% }
+.page.flipped[data-page="3"]{ left:20% }
+.page.flipped[data-page="4"]{ left:20% }
+.page.flipped[data-page="5"]{ left:20% }
+.page.flipped[data-page="6"]{ left:20% }
+.page.flipped[data-page="7"]{ left:20% }
+.page.flipped[data-page="8"]{ left:20% }
+.page.flipped[data-page="9"]{ left:20% }
+.page.flipped[data-page="10"]{ left:20% }
+
+/* Knappar och indikator under boken */
+.controls{
+  margin-top:28px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  justify-content:center;
+}
+
+.nav-btn{
+  background:linear-gradient(180deg,var(--accent), #6fd8ff);
+  color:var(--ink);
+  border:0;
+  padding:10px 16px;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 14px rgba(7,30,48,0.25);
+  min-width:90px;
+}
+.nav-btn:active{ transform:translateY(1px) }
+
+.page-indicator{
+  color:var(--paper);
+  font-weight:600;
+  background:rgba(255,255,255,0.03);
+  padding:8px 12px;
+  border-radius:10px;
+  min-width:120px;
+}
+
+.credits{
+  margin-top:14px;
+  color:var(--muted);
+}
+
+.swipe-hint {
+  margin-top:8px;
+  color:var(--muted);
+  font-size:15px;
+  text-align:center;
+  opacity:0.8;
+}
+
+@media (max-width:900px){
+  :root{ --page-width:360px; --page-height:520px; --image-size:180px; }
+  .book{ width:calc(var(--page-width) + 20px) }
+  .page-inner{padding:18px 10px 10px 10px;}
+  .nav-btn {
+    padding:14px 18px;
+    font-size:18px;
+  }
+  .click-area {background:transparent;}
+}
+
+@media (max-width:450px){
+  :root{ --page-width:98vw; --page-height:62vh; --image-size:110px; }
+  .page-inner{padding:10px 2vw 10px 2vw;}
+  .nav-btn{font-size:15px;}
+}
