@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Investera eller amortera? (Tillgänglig version)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      /* WCAG AA/AAA Compliant High-Contrast Palette */
+      --bg: #0A0A0A;
+      --panel: #1A1A1A;
+      --border: #444444;
+      --text: #F5F5F5;
+      --muted: #A3A3A3;
+      --focus: #66AFFF;
+
+      /* Chart Colors - High contrast and distinct */
+      --c-blue: #55A6FF;   /* Net - Invest */
+      --c-green: #66CC77;  /* Net - Amortize & Capital - Invest */
+      --c-orange: #FFB347; /* Loan - Amortize */
+      --c-pink: #FF80BF;   /* Capital - Amortize */
+      --c-violet: #C792EA; /* Interest - Amortize */
+      --c-gray: #B0B0B0;   /* Interest - Invest */
+    }
+    html, body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    header {
+      padding: 24px 20px 12px;
+    }
+    h1 { font-size: 1.8rem; margin: 0 0 8px; }
+    .sub { color: var(--muted); font-size: 1rem; max-width: 80ch; }
+    .wrap {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      padding: 16px 20px 40px;
+    }
+    @media (max-width: 1024px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+    .card {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .form { padding: 20px; }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr 1fr;
+    }
+    label { font-size: 0.9rem; color: var(--muted); display:block; margin-bottom: 6px; }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    input[type="number"]:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .help { font-size: 0.8rem; color: var(--muted); margin-top: 4px;}
+    .row { display: flex; gap: 12px; align-items: center; margin-top: 20px; }
+    .btn {
+      background-color: #2563EB; /* Blue-600 */
+      color: white; border: 0; border-radius: 8px;
+      padding: 12px 16px; cursor: pointer; font-weight: 600;
+      font-size: 1rem;
+    }
+    .btn:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .btn.secondary {
+      background-color: #333333;
+    }
+    .summary { padding: 16px; border-top: 1px solid var(--border); }
+    #recommendation p { margin-top: 0; font-size: 1.1rem; }
+    .kpis { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-top: 16px; }
+    .kpi {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+    }
+    .kpi h4 { margin: 0; font-size: 0.9rem; color: var(--muted); font-weight: 500; }
+    .kpi p { margin: 4px 0 0; font-size: 1.4rem; font-weight: 700; }
+    .kpi small { color: var(--muted); font-weight: 500; font-size: 1rem; }
+    .good { color: var(--c-green); }
+    .bad { color: var(--c-pink); }
+    .warn { color: var(--c-orange); }
+    .charts { padding: 12px; }
+    .chart-card { padding: 16px; margin-bottom: 20px; }
+    canvas { width: 100%; height: 380px; }
+    footer {
+      color: var(--muted); font-size: 0.85rem; padding: 20px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Investera eller amortera?</h1>
+    <div class="sub">Jämför två strategier med förbättrad kontrast och läsbarhet. Grundvärdena matchar din graf: bolån 1 500 000 kr, ränta 4%, årlig amortering 30 000 kr, avkastning 5%, horisont 30 år.</div>
+  </header>
+
+  <div class="wrap">
+    <section class="card form">
+      <div class="grid">
+        <div>
+          <label for="loan">Bolån (kr)</label>
+          <input id="loan" type="number" value="1500000" min="0" step="1000">
+        </div>
+        <div>
+          <label for="amortYear">Årlig grundamortering (kr)</label>
+          <input id="amortYear" type="number" value="30000" min="0" step="1000">
+        </div>
+        <div>
+          <label for="extraYear">Årligt extra belopp (kr)</label>
+          <input id="extraYear" type="number" value="30000" min="0" step="1000">
+        </div>
+        <div>
+          <label for="years">Antal år</label>
+          <input id="years" type="number" value="30" min="1" max="60" step="1">
+        </div>
+        <div>
+          <label for="loanRate">Bolåneränta p.a. (%)</label>
+          <input id="loanRate" type="number" value="4" step="0.05" min="0">
+        </div>
+        <div>
+          <label for="invRate">Avkastning p.a. (%)</label>
+          <input id="invRate" type="number" value="5" step="0.05" min="0">
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <div class="grid">
+        <div>
+          <label for="taxDeduct">Räntereduktion (%)</label>
+          <input id="taxDeduct" type="number" value="30" step="1" min="0" max="100">
+          <div class="help">T.ex. 30% upp till 100 tkr räntor.</div>
+        </div>
+        <div>
+          <label for="taxInv">Skatt på avkastning (%)</label>
+          <input id="taxInv" type="number" value="0" step="0.1" min="0" max="100">
+          <div class="help">Förenklat: direkt skatt på avkastning.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="run">Uppdatera beräkning</button>
+        <button class="btn secondary" id="reset">Återställ</button>
+      </div>
+
+      <div class="summary">
+        <div id="recommendation"></div>
+        <div class="kpis">
+          <div class="kpi">
+            <h4>Effektiv ränta</h4>
+            <p><span id="effLoanRate"></span> <small>%</small></p>
+          </div>
+          <div class="kpi">
+            <h4>Effektiv avkastning</h4>
+            <p><span id="effInvRate"></span> <small>%</small></p>
+          </div>
+          <div class="kpi">
+            <h4>Skuldfri (Amortera)</h4>
+            <p><span id="monthsToZero"></span> <small>år</small></p>
+          </div>
+          <div class="kpi">
+            <h4>Brytpunkt avkast.</h4>
+            <p><span id="breakeven"></span> <small>%</small></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="card chart-card">
+        <canvas id="netChart"></canvas>
+      </div>
+      <div class="card chart-card">
+        <canvas id="loanChart"></canvas>
+      </div>
+      <div class="card chart-card">
+        <canvas id="investChart"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    Ansvarsfriskrivning: Detta är en förenklad modell. Beräkningar sker månadsvis med rak amortering. Inflation och ränteändringar beaktas inte. Historisk avkastning är ingen garanti för framtida avkastning.
+  </footer>
+
+  <script>
+    const fmtK = v => v.toLocaleString('sv-SE', {maximumFractionDigits:0});
+    const yrs = m => (m/12).toFixed(1);
+
+    function simulate(params){
+      const { P0, amortYear, extraYear, years, loanRate, invRate, taxDeduct, taxInv } = params;
+      const months = Math.round(years * 12);
+      const rLoan = (loanRate * (1 - taxDeduct/100)) / 12 / 100;
+      const rInv  = (invRate  * (1 - taxInv/100))   / 12 / 100;
+
+      const amortM = amortYear / 12;
+      const extraM = extraYear / 12;
+      const cashflowM = amortM + extraM;
+
+      let loanA = P0, invA = 0, intAccA = 0;
+      const loanSeriesA = [], invSeriesA = [], netSeriesA = [], intSeriesA = [];
+
+      let loanB = P0, invB = 0, intAccB = 0;
+      const loanSeriesB = [], invSeriesB = [], netSeriesB = [], intSeriesB = [];
+      let monthsToZero = null;
+
+      for(let m=0; m<=months; m++){
+        loanSeriesA.push(loanA);
+        invSeriesA.push(invA);
+        intSeriesA.push(intAccA);
+        netSeriesA.push(invA + (P0 - loanA));
+
+        loanSeriesB.push(loanB);
+        invSeriesB.push(invB);
+        intSeriesB.push(intAccB);
+        netSeriesB.push(invB + (P0 - loanB));
+
+        if(m===months) break;
+
+        if(loanA > 0){
+          const interestA = loanA * rLoan;
+          intAccA += interestA;
+          const principalPayA = Math.min(amortM, loanA);
+          loanA = Math.max(0, loanA + interestA - principalPayA);
+        }
+        invA = invA * (1 + rInv) + extraM;
+
+        if(loanB > 0){
+          const interestB = loanB * rLoan;
+          intAccB += interestB;
+          const principalPayB = Math.min(cashflowM, loanB);
+          loanB = Math.max(0, loanB + interestB - principalPayB);
+          if(loanB === 0 && monthsToZero === null) monthsToZero = m+1;
+        } else {
+          invB = invB * (1 + rInv) + cashflowM;
+        }
+        if(loanB > 0){
+          invB = invB * (1 + rInv);
+        }
+      }
+
+      const labels = Array.from({length: years + 1}, (_, y) => `${y} år`);
+      const yearly = s => Array.from({length: years + 1}, (_, y) => s[Math.min(s.length-1, Math.round(y*12))]);
+
+      return {
+        labels,
+        A: { loan: yearly(loanSeriesA), invest: yearly(invSeriesA), net: yearly(netSeriesA), interest: yearly(intSeriesA), end: { net: netSeriesA.at(-1) } },
+        B: { loan: yearly(loanSeriesB), invest: yearly(invSeriesB), net: yearly(netSeriesB), interest: yearly(intSeriesB), end: { net: netSeriesB.at(-1) } },
+        monthsToZero,
+        eff: { rLoanPa: rLoan*12*100, rInvPa: rInv*12*100 }
+      };
+    }
+
+    function breakevenReturn(params){
+      let lo = 0, hi = 25;
+      for(let i=0;i<40;i++){
+        const mid = (lo+hi)/2;
+        const res = simulate({...params, invRate: mid, taxInv: 0});
+        if (res.A.end.net > res.B.end.net) hi = mid; else lo = mid;
+      }
+      return (lo+hi)/2;
+    }
+    
+    const charts = {};
+
+    function buildOrUpdateCharts(model){
+      const { labels, A, B } = model;
+      const datasets = {
+        net: [
+          { label: 'Netto – Investera extra', data: A.net, borderColor: 'var(--c-blue)', borderWidth: 3, tension:.1 },
+          { label: 'Netto – Amortera extra', data: B.net, borderColor: 'var(--c-green)', borderWidth: 3, tension:.1 }
+        ],
+        loan: [
+          { label: 'Skuld – Investera', data: A.loan, borderColor: 'var(--c-blue)', borderWidth: 3, tension:.1 },
+          { label: 'Skuld – Amortera', data: B.loan, borderColor: 'var(--c-orange)', borderWidth: 3, tension:.1 }
+        ],
+        invest: [
+          { label: 'Kapital – Investera', data: A.invest, borderColor: 'var(--c-green)', borderWidth: 3, tension:.1 },
+          { label: 'Kapital – Amortera', data: B.invest, borderColor: 'var(--c-pink)', borderWidth: 3, tension:.1 },
+          { label: 'Ränta – Investera', data: A.interest, borderColor: 'var(--c-gray)', borderWidth: 2, borderDash:[5,5], tension:.1 },
+          { label: 'Ränta – Amortera', data: B.interest, borderColor: 'var(--c-violet)', borderWidth: 2, borderDash:[5,5], tension:.1 }
+        ]
+      };
+      const titles = { net: 'Nettoförmögenhet (Kapital + Amorterat)', loan: 'Kvarvarande skuld', invest: 'Kapitalvärde och ackumulerad ränta' };
+
+      for (const key of ['net', 'loan', 'invest']) {
+        if (charts[key]) {
+          charts[key].data.labels = labels;
+          charts[key].data.datasets.forEach((d, i) => {
+            d.data = datasets[key][i].data;
+          });
+          charts[key].update();
+        } else {
+          charts[key] = new Chart(document.getElementById(`${key}Chart`), {
+            type: 'line',
+            data: { labels, datasets: datasets[key] },
+            options: {
+              responsive: true, interaction: { mode: 'index', intersect: false },
+              scales: {
+                y: { 
+                  ticks: { 
+                    callback: v => v >= 1e6 ? `${(v/1e6).toFixed(1)}M` : `${(v/1e3).toFixed(0)}k`,
+                    color: 'var(--muted)',
+                    font: { size: 14 }
+                  }, 
+                  grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                },
+                x: { 
+                  ticks: { 
+                    color: 'var(--muted)', 
+                    maxRotation: 0, 
+                    autoSkip: true,
+                    font: { size: 14 }
+                  }, 
+                  grid: { color: 'rgba(255, 255, 255, 0.05)' } 
+                }
+              },
+              plugins: {
+                legend: { labels: { color: 'var(--text)', font: { size: 14 } } },
+                title: { display: true, text: titles[key], color: 'var(--text)', font: { size: 18, weight: 'bold' } },
+                tooltip: { 
+                  titleFont: { size: 14 },
+                  bodyFont: { size: 14 },
+                  callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtK(ctx.parsed.y)} kr` } 
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+
+    function run() {
+      const params = {
+        P0: parseFloat(document.getElementById('loan').value),
+        amortYear: parseFloat(document.getElementById('amortYear').value),
+        extraYear: parseFloat(document.getElementById('extraYear').value),
+        years: parseInt(document.getElementById('years').value),
+        loanRate: parseFloat(document.getElementById('loanRate').value),
+        invRate: parseFloat(document.getElementById('invRate').value),
+        taxDeduct: parseFloat(document.getElementById('taxDeduct').value),
+        taxInv: parseFloat(document.getElementById('taxInv').value),
+      };
+
+      const model = simulate(params);
+      buildOrUpdateCharts(model);
+
+      document.getElementById('effLoanRate').textContent = model.eff.rLoanPa.toFixed(2);
+      document.getElementById('effInvRate').textContent = model.eff.rInvPa.toFixed(2);
+      document.getElementById('monthsToZero').textContent = model.monthsToZero ? yrs(model.monthsToZero) : '>';
+
+      const breakeven = breakevenReturn(params);
+      document.getElementById('breakeven').textContent = breakeven.toFixed(2);
+
+      const diff = model.A.end.net - model.B.end.net;
+      const recEl = document.getElementById('recommendation');
+      if (Math.abs(diff) < 1000) {
+        recEl.innerHTML = `<p class="warn">Resultaten är nästan identiska. Välj baserat på din riskpreferens.</p>`;
+      } else if (diff > 0) {
+        recEl.innerHTML = `<p class="good"><b>Investera extra</b> ger bäst resultat med <b>${fmtK(diff)} kr</b> mer i nettoförmögenhet.</p>`;
+      } else {
+        recEl.innerHTML = `<p class="bad"><b>Amortera extra</b> ger bäst resultat med <b>${fmtK(-diff)} kr</b> mer i nettoförmögenhet.</p>`;
+      }
+    }
+    
+    document.getElementById('run').addEventListener('click', run);
+    document.getElementById('reset').addEventListener('click', () => {
+        document.getElementById('loan').value = 1500000;
+        document.getElementById('amortYear').value = 30000;
+        document.getElementById('extraYear').value = 30000;
+        document.getElementById('years').value = 30;
+        document.getElementById('loanRate').value = 4;
+        document.getElementById('invRate').value = 5;
+        document.getElementById('taxDeduct').value = 30;
+        document.getElementById('taxInv').value = 0;
+        run();
+    });
+
+    document.addEventListener('DOMContentLoaded', run);
+  </script>
+</body>
+</html>
