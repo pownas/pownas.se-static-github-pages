@@ -3,25 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Investera eller amortera? (Tillgänglig version)</title>
+  <title>Investera eller amortera? (Korrigerad version)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      /* WCAG AA/AAA Compliant High-Contrast Palette */
-      --bg: #0A0A0A;
-      --panel: #1A1A1A;
+      --bg: #121212;
+      --panel: #1E1E1E;
       --border: #444444;
-      --text: #F5F5F5;
-      --muted: #A3A3A3;
-      --focus: #66AFFF;
-
-      /* Chart Colors - High contrast and distinct */
-      --c-blue: #55A6FF;   /* Net - Invest */
-      --c-green: #66CC77;  /* Net - Amortize & Capital - Invest */
-      --c-orange: #FFB347; /* Loan - Amortize */
-      --c-pink: #FF80BF;   /* Capital - Amortize */
-      --c-violet: #C792EA; /* Interest - Amortize */
-      --c-gray: #B0B0B0;   /* Interest - Invest */
+      --text: #E0E0E0;
+      --muted: #A0A0A0;
+      --focus: #007BFF;
+      --blue-btn: #0056b3;
     }
     html, body {
       background-color: var(--bg);
@@ -31,9 +23,7 @@
       font-size: 16px;
       line-height: 1.6;
     }
-    header {
-      padding: 24px 20px 12px;
-    }
+    header { padding: 24px 20px 12px; }
     h1 { font-size: 1.8rem; margin: 0 0 8px; }
     .sub { color: var(--muted); font-size: 1rem; max-width: 80ch; }
     .wrap {
@@ -42,20 +32,14 @@
       gap: 24px;
       padding: 16px 20px 40px;
     }
-    @media (max-width: 1024px) {
-      .wrap { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 1024px) { .wrap { grid-template-columns: 1fr; } }
     .card {
       background-color: var(--panel);
       border: 1px solid var(--border);
       border-radius: 12px;
     }
     .form { padding: 20px; }
-    .grid {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: 1fr 1fr;
-    }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
     label { font-size: 0.9rem; color: var(--muted); display:block; margin-bottom: 6px; }
     input[type="number"] {
       width: 100%;
@@ -68,24 +52,19 @@
       outline: none;
     }
     input[type="number"]:focus-visible {
-      outline: 2px solid var(--focus);
-      outline-offset: 2px;
+      outline: 3px solid var(--focus);
+      outline-offset: 1px;
     }
     .help { font-size: 0.8rem; color: var(--muted); margin-top: 4px;}
     .row { display: flex; gap: 12px; align-items: center; margin-top: 20px; }
     .btn {
-      background-color: #2563EB; /* Blue-600 */
-      color: white; border: 0; border-radius: 8px;
+      background-color: var(--blue-btn);
+      color: #FFFFFF; border: 0; border-radius: 8px;
       padding: 12px 16px; cursor: pointer; font-weight: 600;
       font-size: 1rem;
     }
-    .btn:focus-visible {
-      outline: 2px solid var(--focus);
-      outline-offset: 2px;
-    }
-    .btn.secondary {
-      background-color: #333333;
-    }
+    .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .btn.secondary { background-color: #383838; }
     .summary { padding: 16px; border-top: 1px solid var(--border); }
     #recommendation p { margin-top: 0; font-size: 1.1rem; }
     .kpis { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-top: 16px; }
@@ -95,25 +74,24 @@
     .kpi h4 { margin: 0; font-size: 0.9rem; color: var(--muted); font-weight: 500; }
     .kpi p { margin: 4px 0 0; font-size: 1.4rem; font-weight: 700; }
     .kpi small { color: var(--muted); font-weight: 500; font-size: 1rem; }
-    .good { color: var(--c-green); }
-    .bad { color: var(--c-pink); }
-    .warn { color: var(--c-orange); }
+    .good { color: #28a745; } /* Bright Green */
+    .bad { color: #dc3545; }  /* Bright Red */
+    .warn { color: #ffc107; } /* Bright Yellow */
     .charts { padding: 12px; }
     .chart-card { padding: 16px; margin-bottom: 20px; }
     canvas { width: 100%; height: 380px; }
-    footer {
-      color: var(--muted); font-size: 0.85rem; padding: 20px; text-align: center;
-    }
+    footer { color: var(--muted); font-size: 0.85rem; padding: 20px; text-align: center; }
   </style>
 </head>
 <body>
   <header>
     <h1>Investera eller amortera?</h1>
-    <div class="sub">Jämför två strategier med förbättrad kontrast och läsbarhet. Grundvärdena matchar din graf: bolån 1 500 000 kr, ränta 4%, årlig amortering 30 000 kr, avkastning 5%, horisont 30 år.</div>
+    <div class="sub">Jämför två strategier med garanterat högkontrasterande grafer. Grundvärdena matchar din graf.</div>
   </header>
 
   <div class="wrap">
     <section class="card form">
+      <!-- Formuläret är oförändrat -->
       <div class="grid">
         <div>
           <label for="loan">Bolån (kr)</label>
@@ -140,7 +118,6 @@
           <input id="invRate" type="number" value="5" step="0.05" min="0">
         </div>
       </div>
-
       <div style="height:10px"></div>
       <div class="grid">
         <div>
@@ -154,45 +131,25 @@
           <div class="help">Förenklat: direkt skatt på avkastning.</div>
         </div>
       </div>
-
       <div class="row">
         <button class="btn" id="run">Uppdatera beräkning</button>
         <button class="btn secondary" id="reset">Återställ</button>
       </div>
-
       <div class="summary">
         <div id="recommendation"></div>
         <div class="kpis">
-          <div class="kpi">
-            <h4>Effektiv ränta</h4>
-            <p><span id="effLoanRate"></span> <small>%</small></p>
-          </div>
-          <div class="kpi">
-            <h4>Effektiv avkastning</h4>
-            <p><span id="effInvRate"></span> <small>%</small></p>
-          </div>
-          <div class="kpi">
-            <h4>Skuldfri (Amortera)</h4>
-            <p><span id="monthsToZero"></span> <small>år</small></p>
-          </div>
-          <div class="kpi">
-            <h4>Brytpunkt avkast.</h4>
-            <p><span id="breakeven"></span> <small>%</small></p>
-          </div>
+          <div class="kpi"><h4>Effektiv ränta</h4><p><span id="effLoanRate"></span> <small>%</small></p></div>
+          <div class="kpi"><h4>Effektiv avkastning</h4><p><span id="effInvRate"></span> <small>%</small></p></div>
+          <div class="kpi"><h4>Skuldfri (Amortera)</h4><p><span id="monthsToZero"></span> <small>år</small></p></div>
+          <div class="kpi"><h4>Brytpunkt avkast.</h4><p><span id="breakeven"></span> <small>%</small></p></div>
         </div>
       </div>
     </section>
 
     <section class="charts">
-      <div class="card chart-card">
-        <canvas id="netChart"></canvas>
-      </div>
-      <div class="card chart-card">
-        <canvas id="loanChart"></canvas>
-      </div>
-      <div class="card chart-card">
-        <canvas id="investChart"></canvas>
-      </div>
+      <div class="card chart-card"><canvas id="netChart"></canvas></div>
+      <div class="card chart-card"><canvas id="loanChart"></canvas></div>
+      <div class="card chart-card"><canvas id="investChart"></canvas></div>
     </section>
   </div>
 
@@ -201,6 +158,7 @@
   </footer>
 
   <script>
+    // Simuleringslogiken är oförändrad
     const fmtK = v => v.toLocaleString('sv-SE', {maximumFractionDigits:0});
     const yrs = m => (m/12).toFixed(1);
 
@@ -209,56 +167,34 @@
       const months = Math.round(years * 12);
       const rLoan = (loanRate * (1 - taxDeduct/100)) / 12 / 100;
       const rInv  = (invRate  * (1 - taxInv/100))   / 12 / 100;
-
       const amortM = amortYear / 12;
       const extraM = extraYear / 12;
       const cashflowM = amortM + extraM;
-
       let loanA = P0, invA = 0, intAccA = 0;
       const loanSeriesA = [], invSeriesA = [], netSeriesA = [], intSeriesA = [];
-
       let loanB = P0, invB = 0, intAccB = 0;
       const loanSeriesB = [], invSeriesB = [], netSeriesB = [], intSeriesB = [];
       let monthsToZero = null;
-
       for(let m=0; m<=months; m++){
-        loanSeriesA.push(loanA);
-        invSeriesA.push(invA);
-        intSeriesA.push(intAccA);
-        netSeriesA.push(invA + (P0 - loanA));
-
-        loanSeriesB.push(loanB);
-        invSeriesB.push(invB);
-        intSeriesB.push(intAccB);
-        netSeriesB.push(invB + (P0 - loanB));
-
+        loanSeriesA.push(loanA); invSeriesA.push(invA); intSeriesA.push(intAccA); netSeriesA.push(invA + (P0 - loanA));
+        loanSeriesB.push(loanB); invSeriesB.push(invB); intSeriesB.push(intAccB); netSeriesB.push(invB + (P0 - loanB));
         if(m===months) break;
-
         if(loanA > 0){
-          const interestA = loanA * rLoan;
-          intAccA += interestA;
-          const principalPayA = Math.min(amortM, loanA);
-          loanA = Math.max(0, loanA + interestA - principalPayA);
+          const iA = loanA * rLoan; intAccA += iA;
+          loanA = Math.max(0, loanA + iA - Math.min(amortM, loanA));
         }
         invA = invA * (1 + rInv) + extraM;
-
         if(loanB > 0){
-          const interestB = loanB * rLoan;
-          intAccB += interestB;
-          const principalPayB = Math.min(cashflowM, loanB);
-          loanB = Math.max(0, loanB + interestB - principalPayB);
+          const iB = loanB * rLoan; intAccB += iB;
+          loanB = Math.max(0, loanB + iB - Math.min(cashflowM, loanB));
           if(loanB === 0 && monthsToZero === null) monthsToZero = m+1;
         } else {
           invB = invB * (1 + rInv) + cashflowM;
         }
-        if(loanB > 0){
-          invB = invB * (1 + rInv);
-        }
+        if(loanB > 0){ invB = invB * (1 + rInv); }
       }
-
       const labels = Array.from({length: years + 1}, (_, y) => `${y} år`);
       const yearly = s => Array.from({length: years + 1}, (_, y) => s[Math.min(s.length-1, Math.round(y*12))]);
-
       return {
         labels,
         A: { loan: yearly(loanSeriesA), invest: yearly(invSeriesA), net: yearly(netSeriesA), interest: yearly(intSeriesA), end: { net: netSeriesA.at(-1) } },
@@ -267,7 +203,6 @@
         eff: { rLoanPa: rLoan*12*100, rInvPa: rInv*12*100 }
       };
     }
-
     function breakevenReturn(params){
       let lo = 0, hi = 25;
       for(let i=0;i<40;i++){
@@ -282,20 +217,22 @@
 
     function buildOrUpdateCharts(model){
       const { labels, A, B } = model;
+      
+      // KORRIGERING: Hårdkodade högkontrasterande färger för graferna
       const datasets = {
         net: [
-          { label: 'Netto – Investera extra', data: A.net, borderColor: 'var(--c-blue)', borderWidth: 3, tension:.1 },
-          { label: 'Netto – Amortera extra', data: B.net, borderColor: 'var(--c-green)', borderWidth: 3, tension:.1 }
+          { label: 'Netto – Investera extra', data: A.net, borderColor: '#33A0FF', borderWidth: 3, tension:.1 },
+          { label: 'Netto – Amortera extra', data: B.net, borderColor: '#FFB000', borderWidth: 3, tension:.1 }
         ],
         loan: [
-          { label: 'Skuld – Investera', data: A.loan, borderColor: 'var(--c-blue)', borderWidth: 3, tension:.1 },
-          { label: 'Skuld – Amortera', data: B.loan, borderColor: 'var(--c-orange)', borderWidth: 3, tension:.1 }
+          { label: 'Skuld – Investera', data: A.loan, borderColor: '#33A0FF', borderWidth: 3, tension:.1 },
+          { label: 'Skuld – Amortera', data: B.loan, borderColor: '#FFB000', borderWidth: 3, tension:.1 }
         ],
         invest: [
-          { label: 'Kapital – Investera', data: A.invest, borderColor: 'var(--c-green)', borderWidth: 3, tension:.1 },
-          { label: 'Kapital – Amortera', data: B.invest, borderColor: 'var(--c-pink)', borderWidth: 3, tension:.1 },
-          { label: 'Ränta – Investera', data: A.interest, borderColor: 'var(--c-gray)', borderWidth: 2, borderDash:[5,5], tension:.1 },
-          { label: 'Ränta – Amortera', data: B.interest, borderColor: 'var(--c-violet)', borderWidth: 2, borderDash:[5,5], tension:.1 }
+          { label: 'Kapital – Investera', data: A.invest, borderColor: '#4CBB17', borderWidth: 3, tension:.1 },
+          { label: 'Kapital – Amortera', data: B.invest, borderColor: '#F038A0', borderWidth: 3, tension:.1 },
+          { label: 'Ränta – Investera', data: A.interest, borderColor: '#A0A0A0', borderWidth: 2, borderDash:[5,5], tension:.1 },
+          { label: 'Ränta – Amortera', data: B.interest, borderColor: '#B284BE', borderWidth: 2, borderDash:[5,5], tension:.1 }
         ]
       };
       const titles = { net: 'Nettoförmögenhet (Kapital + Amorterat)', loan: 'Kvarvarande skuld', invest: 'Kapitalvärde och ackumulerad ränta' };
@@ -303,9 +240,7 @@
       for (const key of ['net', 'loan', 'invest']) {
         if (charts[key]) {
           charts[key].data.labels = labels;
-          charts[key].data.datasets.forEach((d, i) => {
-            d.data = datasets[key][i].data;
-          });
+          charts[key].data.datasets.forEach((d, i) => d.data = datasets[key][i].data);
           charts[key].update();
         } else {
           charts[key] = new Chart(document.getElementById(`${key}Chart`), {
@@ -315,29 +250,19 @@
               responsive: true, interaction: { mode: 'index', intersect: false },
               scales: {
                 y: { 
-                  ticks: { 
-                    callback: v => v >= 1e6 ? `${(v/1e6).toFixed(1)}M` : `${(v/1e3).toFixed(0)}k`,
-                    color: 'var(--muted)',
-                    font: { size: 14 }
-                  }, 
-                  grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                  ticks: { color: '#C0C0C0', font: { size: 14 } }, 
+                  grid: { color: 'rgba(255, 255, 255, 0.15)' } 
                 },
                 x: { 
-                  ticks: { 
-                    color: 'var(--muted)', 
-                    maxRotation: 0, 
-                    autoSkip: true,
-                    font: { size: 14 }
-                  }, 
+                  ticks: { color: '#C0C0C0', maxRotation: 0, autoSkip: true, font: { size: 14 }}, 
                   grid: { color: 'rgba(255, 255, 255, 0.05)' } 
                 }
               },
               plugins: {
-                legend: { labels: { color: 'var(--text)', font: { size: 14 } } },
-                title: { display: true, text: titles[key], color: 'var(--text)', font: { size: 18, weight: 'bold' } },
+                legend: { labels: { color: '#E0E0E0', font: { size: 14 } } },
+                title: { display: true, text: titles[key], color: '#FFFFFF', font: { size: 18, weight: 'bold' } },
                 tooltip: { 
-                  titleFont: { size: 14 },
-                  bodyFont: { size: 14 },
+                  titleFont: { size: 14 }, bodyFont: { size: 14 },
                   callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtK(ctx.parsed.y)} kr` } 
                 }
               }
@@ -349,14 +274,14 @@
 
     function run() {
       const params = {
-        P0: parseFloat(document.getElementById('loan').value),
-        amortYear: parseFloat(document.getElementById('amortYear').value),
-        extraYear: parseFloat(document.getElementById('extraYear').value),
-        years: parseInt(document.getElementById('years').value),
-        loanRate: parseFloat(document.getElementById('loanRate').value),
-        invRate: parseFloat(document.getElementById('invRate').value),
-        taxDeduct: parseFloat(document.getElementById('taxDeduct').value),
-        taxInv: parseFloat(document.getElementById('taxInv').value),
+        P0: parseFloat(document.getElementById('loan').value) || 0,
+        amortYear: parseFloat(document.getElementById('amortYear').value) || 0,
+        extraYear: parseFloat(document.getElementById('extraYear').value) || 0,
+        years: parseInt(document.getElementById('years').value) || 1,
+        loanRate: parseFloat(document.getElementById('loanRate').value) || 0,
+        invRate: parseFloat(document.getElementById('invRate').value) || 0,
+        taxDeduct: parseFloat(document.getElementById('taxDeduct').value) || 0,
+        taxInv: parseFloat(document.getElementById('taxInv').value) || 0,
       };
 
       const model = simulate(params);
@@ -365,9 +290,7 @@
       document.getElementById('effLoanRate').textContent = model.eff.rLoanPa.toFixed(2);
       document.getElementById('effInvRate').textContent = model.eff.rInvPa.toFixed(2);
       document.getElementById('monthsToZero').textContent = model.monthsToZero ? yrs(model.monthsToZero) : '>';
-
-      const breakeven = breakevenReturn(params);
-      document.getElementById('breakeven').textContent = breakeven.toFixed(2);
+      document.getElementById('breakeven').textContent = breakevenReturn(params).toFixed(2);
 
       const diff = model.A.end.net - model.B.end.net;
       const recEl = document.getElementById('recommendation');
