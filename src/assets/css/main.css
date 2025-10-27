@@ -128,12 +128,18 @@ header {
 header > p {
     margin: 2rem auto;
     max-width: 300px;
-    animation: float 6s ease-in-out infinite;
 }
 
 @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-20px); }
+}
+
+/* Only apply floating animation if user hasn't requested reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+    header > p {
+        animation: float 6s ease-in-out infinite;
+    }
 }
 
 header img {
@@ -325,16 +331,27 @@ button:focus-visible {
     }
 }
 
-#content > p {
-    animation: fadeInUp 0.6s ease forwards;
-    opacity: 0;
+/* Only apply animations if user hasn't requested reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+    #content > p {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+    }
+
+    #content > p:nth-child(2) { animation-delay: 0.1s; }
+    #content > p:nth-child(3) { animation-delay: 0.2s; }
+    #content > p:nth-child(4) { animation-delay: 0.3s; }
+    #content > p:nth-child(5) { animation-delay: 0.4s; }
+    #content > p:nth-child(6) { animation-delay: 0.5s; }
 }
 
-#content > p:nth-child(2) { animation-delay: 0.1s; }
-#content > p:nth-child(3) { animation-delay: 0.2s; }
-#content > p:nth-child(4) { animation-delay: 0.3s; }
-#content > p:nth-child(5) { animation-delay: 0.4s; }
-#content > p:nth-child(6) { animation-delay: 0.5s; }
+/* For users who prefer reduced motion, show content immediately */
+@media (prefers-reduced-motion: reduce) {
+    #content > p {
+        opacity: 1;
+        animation: none;
+    }
+}
 
 /* Legacy Support */
 #tagline {
